@@ -8,6 +8,8 @@ var GAME_HEIGHT = 480;
 var WORLD_WIDTH = GAME_WIDTH;
 var WORLD_HEIGHT = GAME_HEIGHT;
 
+
+
 //Create a sound 
 // /!\ Does not work in firefox
 var bullet_sound = new Audio("sound/bullet.mp3");
@@ -23,8 +25,8 @@ var objToLoad = [
 
 g_DataCache.queue = objToLoad;
 
-// Handles the mouse events
-document.onmousemove = function (event){
+var rnd = function (mini, maxi){
+	return mini + Math.floor(Math.random()*(maxi-mini));
 }
 
 Monster = function(){
@@ -35,9 +37,15 @@ Monster.prototype = {
 	x: 0, 
 	y : 0,
 	w : 32,
-	h : 32
+	h : 32,
+	path : {}
 }
 
+Monster.prototype.generatePath = function(){
+	/*for (var i = 0; i < rnd (0, 10); i = i+1) {
+		// path[i]
+	}*/
+}
 ///////////////////////////////////////////////////////////////////////////////
 // Game state
 ///////////////////////////////////////////////////////////////////////////////
@@ -62,7 +70,6 @@ GameState.prototype = {
 	nbMonsters : 10,
 	monsters : {},
 	
-	monstersCaught : 0,
 	runDuration: 2000, // How long one can run
 	runWaitingTime: 2000, // when you are done running, how long you have to wait before being able to run again
 	viewport:{},
@@ -72,9 +79,6 @@ GameState.prototype = {
 	target:{}		// where the player is supposed to go to
 }
 
-var rnd = function (mini, maxi){
-	return mini + Math.floor(Math.random()*(maxi-mini));
-}
 
 // We want a spritesheet with 4 states, each state containing 8 images.
 var heroSprite = new SpriteSheet(4,8, 200, "hero");
@@ -164,7 +168,6 @@ GameState.prototype.Update = function (modifier) {
 		&& this.target.y <= (this.hero.y + 32)
 	) {
 		this.Reset();
-		++this.monstersCaught;
 		bullet_sound.play();
 		gameEngine.effects.push ( new FadeEffect ("rgb(255, 255, 255)", 0.3, false) );
 	}
@@ -252,8 +255,11 @@ GameState.prototype.CreateWorld = function () {
 	
 	for (i = 0; i < this.nbMonsters; i=i+1){
 		var curr = this.generateRandomPosition(32, 32);
+		this.monsters[i] = new Monster ();
+		this.monsters[i].x = curr.x;
+		this.monsters[i].y = curr.y;
 		
-		this.monsters[i] = curr;
+		this.monsters[i].generatePath();
 	}
 	var target = this.generateRandomPosition (32, 32);
 	
