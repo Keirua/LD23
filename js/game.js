@@ -11,7 +11,7 @@ g_DataCache = new DataCache();
 var objToLoad = [
 	"monster",
 	"hero",
-	"background",
+	// "background",
 	"tree"
 ];
 
@@ -123,12 +123,12 @@ GameState.prototype.Update = function (modifier) {
 GameState.prototype.Draw = function () {
 	if (g_DataCache.done())
 	{
-		this.viewport.DrawSprite ("background", 0, 0, gameEngine.canvas.width, gameEngine.canvas.height);
+		// this.viewport.DrawSprite ("background", 0, 0, gameEngine.canvas.width, gameEngine.canvas.height);
 		this.DrawWorld();
 		
 		this.viewport.DrawSprite ("tree", 128, 128, 128, 128);
 		heroSprite.Draw(g_DataCache, this.viewport, this.hero.x, this.hero.y);
-		this.viewport.DrawSprite ("monster", this.monster.x, this.monster.y, 32, 32);
+		// this.viewport.DrawSprite ("monster", this.monster.x, this.monster.y, 32, 32);
 	}
 
 	// Score
