@@ -42,7 +42,8 @@ GameState.prototype = {
 	monster : {},
 	monstersCaught : 0,
 	viewport:{},
-	obstacles:{}
+	obstacles:{}, // stuff blocking the payer
+	target:{}		// where the player is supposed to go to
 }
 
 var rnd = function (mini, maxi){
@@ -136,6 +137,9 @@ GameState.prototype.Draw = function () {
 };
 
 GameState.prototype.CreateWorld = function () {
+	this.target.x = rnd (0, GAME_WIDTH);
+	this.target.y = rnd (0, GAME_HEIGHT)
+
 	for (var i = 0; i < 4; i=i+1){
 		var curr = ({
 			x: rnd (0, GAME_WIDTH),
@@ -149,6 +153,7 @@ GameState.prototype.CreateWorld = function () {
 }
 
 GameState.prototype.DrawWorld = function () {
+	this.viewport.DrawRect(this.target.x, this.target.y, 32,32, "rgb(0, 200, 0)");
 	for (var i = 0; i < 4; i=i+1){
 		this.viewport.DrawSprite ("tree", this.obstacles[i].x, this.obstacles[i].y, 128, 128);
 	}
@@ -162,8 +167,9 @@ GameState.prototype.DrawCompass = function () {
 	var x0 = GAME_WIDTH - (1 + margin)*s; // upper left corner
 	var y0 = margin * s;
 	
-	var px = this.monster.x - this.hero.x;
-	var py = this.monster.y - this.hero.y;
+	var px = this.target.x - this.hero.x;
+	var py = this.target.y - this.hero.y;
+	
 	var len = Math.sqrt (px*px + py*py);
 	px = (0.4 * s) * (px / len);
 	py = (0.4 * s) *(py / len);

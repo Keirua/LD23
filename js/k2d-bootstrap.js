@@ -223,6 +223,18 @@ Viewport.prototype.DrawSprite = function (name, x, y, w, h)
 	this.context.drawImage(g_DataCache.getImage(name), x - this.x, y-this.y, w, h);
 }
 
+Viewport.prototype.DrawRect = function (px, py, sizex, sizey, col)
+{
+	// this.context.drawImage(g_DataCache.getImage(name), x - this.x, y-this.y, w, h);
+	
+	this.context.fillStyle = col;
+	this.context.beginPath();
+	this.context.rect(px - this.x, py - this.y, sizex, sizey);
+	this.context.closePath();
+	this.context.fill();
+
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // Timer class
 ///////////////////////////////////////////////////////////////////////////////
