@@ -2,6 +2,12 @@
 var GAME_WIDTH = 600;
 var GAME_HEIGHT = 480;
 
+// var WORLD_WIDTH = 4000;
+// var WORLD_HEIGHT = 4000;
+
+var WORLD_WIDTH = GAME_WIDTH;
+var WORLD_HEIGHT = GAME_HEIGHT;
+
 //Create a sound 
 // /!\ Does not work in firefox
 var bullet_sound = new Audio("sound/bullet.mp3");
@@ -28,7 +34,7 @@ GameState = function(){
 	this.viewport = new Viewport(gameEngine);
 	this.context = gameEngine.context;
 	this.runTimer = new Timer();
-	this.obstacles 
+	this.obstacles = {};
 }
 
 GameState.prototype = {
@@ -36,14 +42,15 @@ GameState.prototype = {
 		defaultSpeed: 128,
 		speed: 128, // movement in pixels per second
 		run: true,
-		isRunning:false
+		isRunning:false,
+		canRun: true
 	},
 	scrollingRatio:0.3,
 	monster : {},
 	monstersCaught : 0,
 	viewport:{},
 	obstacles:{}, // stuff blocking the payer
-	nbObstacles:5,
+	nbObstacles:6,
 	target:{}		// where the player is supposed to go to
 }
 
@@ -53,7 +60,6 @@ var rnd = function (mini, maxi){
 
 // We want a spritesheet with 4 states, each state containing 8 images.
 var heroSprite = new SpriteSheet(4,8, 200, "hero");
-
 
 GameState.prototype.HandleEvent = function(event){
 	if (event.keyCode == KB_SPACE) {	// Pressing "enter"
@@ -94,11 +100,11 @@ GameState.prototype.Update = function (modifier) {
 		heroSprite.SetState (3);
 		animate = true;
 	}
-	if (this.collideWorld ({x:this.hero.x, y:newpos.y}, 32, 32) == false)
+	if (this.collideWorld ({x:this.hero.x, y:newpos.y, w: 32, h: 32}) == false)
 	{
 				this.hero.y = newpos.y;
 	}
-	if (this.collideWorld ({x:newpos.x, y:this.hero.y}, 32, 32) == false)
+	if (this.collideWorld ({x:newpos.x, y:this.hero.y, w: 32, h: 32}) == false)
 	{
 
 		this.hero.x = newpos.x;
@@ -122,10 +128,10 @@ GameState.prototype.Update = function (modifier) {
 	heroSprite.Animate();
 	// Are they touching?
 	if (
-		this.hero.x <= (this.monster.x + 32)
-		&& this.monster.x <= (this.hero.x + 32)
-		&& this.hero.y <= (this.monster.y + 32)
-		&& this.monster.y <= (this.hero.y + 32)
+		this.hero.x <= (this.target.x + 32)
+		&& this.target.x <= (this.hero.x + 32)
+		&& this.hero.y <= (this.target.y + 32)
+		&& this.target.y <= (this.hero.y + 32)
 	) {
 		this.Reset();
 		++this.monstersCaught;
@@ -134,26 +140,49 @@ GameState.prototype.Update = function (modifier) {
 	}
 };
 
-GameState.prototype.collideWorld = function (newpos, w, h){
+GameState.prototype.collideWorld = function (player){
 	var isColliding = false;
 	var ratio = 0.2; // We want 20% off
-	
-	for (var i = 0; i < this.nbObstacles; i=i+1){
-		var ow = 128; // obstacle width
-		var oh = 128;
+	var ow, oh, dw, dh
+	for (var key in this.obstacles){
+		var currObstacle = this.obstacles[key];
+		ow = currObstacle.w; // obstacle width
+		oh = currObstacle.h;
+		dw = ratio * ow;
+		dh = ratio * oh;
 		
-		if (
-			newpos.x + w > (this.obstacles[i].x + ratio * ow)
-			&& newpos.x <= (this.obstacles[i].x + (1-ratio) * ow)
-			&& newpos.y +h >(this.obstacles[i].y + ratio * oh)
-			&& newpos.y <= (this.obstacles[i].y + (1-ratio) * oh)
-		)
+		if (intersects (player, {x: currObstacle.x + dw, y: currObstacle.y + dh, w:(1-2*ratio)*ow, h:(1-2*ratio)*oh}))
 		{
 			isColliding = true;
 		}
+		/*
+		if (
+			player.x + player.w > (currObstacle.x + ratio * ow)
+			&& player.x <= (currObstacle.x + (1-ratio) * ow)
+			&& player.y + player.h >(currObstacle.y + ratio * oh)
+			&& player.y <= (currObstacle.y + (1-ratio) * oh)
+		)
+		{
+			isColliding = true;
+		}*/
 	}
 
 	return isColliding;
+}
+
+var intersects = function (a,b){
+	var res = false;
+
+	if (a.x + a.w > b.x
+		&& a.x <= (b.x + b.w)
+		&& a.y + a.h > b.y
+		&& a.y <= (b.y + b.h)
+		)
+		{
+			res = true;
+		}
+		
+	return res;
 }
 
 // Draw everything
@@ -173,15 +202,43 @@ GameState.prototype.Draw = function () {
 	this.DrawCompass();
 };
 
+GameState.prototype.IsOverlappingWorld = function(item){
+	var res = false;
+	for (obst in this.obstacles){
+		if (intersects (item, this.obstacles[obst]))
+		{
+			res = true;
+		}
+	}
+
+	return res;
+}
+
+GameState.prototype.generateRandomPosition = function (w, h){
+	var curr = {};
+	do {
+		curr.x = rnd (0, WORLD_WIDTH);
+		curr.y = rnd (0, WORLD_HEIGHT);
+		curr.w = w;
+		curr.h = h;
+	}while (this.IsOverlappingWorld (curr));
+	return curr;
+}
+
 GameState.prototype.CreateWorld = function () {
-	this.target.x = rnd (0, GAME_WIDTH);
-	this.target.y = rnd (0, GAME_HEIGHT)
+	this.target.x = rnd (0, WORLD_WIDTH);
+	this.target.y = rnd (0, WORLD_HEIGHT)
 
 	for (var i = 0; i < this.nbObstacles; i=i+1){
-		var curr = ({
-			x: rnd (0, GAME_WIDTH),
-			y: rnd (0, GAME_HEIGHT)
-		});
+		var curr = this.generateRandomPosition(128, 128);
+		/*var curr = {}
+		
+		do {
+			curr.x = rnd (0, WORLD_WIDTH);
+			curr.y = rnd (0, WORLD_HEIGHT);
+			curr.w = 128;
+			curr.h = 128;
+		}while (this.IsOverlappingWorld (curr));*/
 		
 		this.obstacles[i] = curr;
 	}
@@ -220,14 +277,27 @@ GameState.prototype.DrawCompass = function () {
 
 // Reset the game when the player catches a monster
 GameState.prototype.Reset = function () {
-	this.hero.x = gameEngine.canvas.width / 2;
-	this.hero.y = gameEngine.canvas.height / 2;
-
 	// Throw the monster somewhere on the screen randomly
 	this.monster.x = 32 + (Math.random() * (gameEngine.canvas.width - 64));
 	this.monster.y = 32 + (Math.random() * (gameEngine.canvas.height - 64));
 	
 	this.CreateWorld();
+	
+	this.hero = {
+		defaultSpeed: 128,
+		speed: 128, // movement in pixels per second
+		run: true,
+		isRunning:false,
+		canRun: true
+	};
+	
+	var heroPos = this.generateRandomPosition(32,32);
+	
+	this.hero.x = heroPos.x;
+	this.hero.y = heroPos.y;
+	this.viewport.x = hero.x;	
+	this.viewport.y = hero.y;
+	this.target = this.generateRandomPosition(32,32);
 };
 
 
@@ -254,7 +324,7 @@ MenuState.prototype = {
 	activeItem : 0,
 	menuItems : [
 		"Play",
-		"Options",
+		// "Options",
 		"Credit",
 	]
 }
@@ -268,8 +338,8 @@ MenuState.prototype.Draw = function(){
 	g_Screen.drawRect (0,0, GAME_WIDTH, GAME_HEIGHT, "#d0e7f9");
 	
 	// Display the Title
-	g_Screen.drawText ("The Great Chase of the Goblins", 32,32, "rgb(0, 250, 250)", "26px Helvetica");
-	g_Screen.drawText ("Cache : " + g_DataCache.queue.length, 32,64, "rgb(0, 250, 250)", "26px Helvetica");
+	g_Screen.drawText ("LD23 - Don't forget to find a title", 32,32, "rgb(0, 250, 250)", "26px Helvetica");
+	// g_Screen.drawText ("Cache : " + g_DataCache.queue.length, 32,64, "rgb(0, 250, 250)", "26px Helvetica");
 	
 	// Display the menu
 	for (i = 0; i < this.menuItems.length; i++)
@@ -359,6 +429,7 @@ var g_Screen = new Screen (gameEngine);
 
 var menuState = new MenuState();
 var gameState = new GameState();
+// gameState.Reset();
 var creditState = new CreditState();
 
 gameEngine.states = {
