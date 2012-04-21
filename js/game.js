@@ -333,7 +333,7 @@ GameState.prototype.CheckDeathLogic = function (modifier){
 		)
 		{
 			// Yep, like this. I could have a bit softer, but hey.
-			// gameEngine.ChangeState("death");
+			gameEngine.ChangeState("death");
 		}
 	}
 }
@@ -528,7 +528,7 @@ GameState.prototype.DrawHUD = function ()
 	this.DrawRunningInfos ();
 	var px = this.hero.x.toFixed (2);
 	var py = this.hero.y.toFixed (2);
-	g_Screen.drawText ("Position : " + px + "x" + py, 32, 80, "rgb(0, 250, 250)", "24px Helvetica");
+	// g_Screen.drawText ("Position : " + px + "x" + py, 32, 80, "rgb(0, 250, 250)", "24px Helvetica");
 	this.DrawCompass ();
 }
 
