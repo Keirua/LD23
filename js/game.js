@@ -19,10 +19,7 @@ g_DataCache.queue = objToLoad;
 
 // Handles the mouse events
 document.onmousemove = function (event){
-	// alert("Hey");
 }
-
-
 
 ///////////////////////////////////////////////////////////////////////////////
 // Game state
@@ -54,6 +51,13 @@ var rnd = function (mini, maxi){
 
 // We want a spritesheet with 4 states, each state containing 8 images.
 var heroSprite = new SpriteSheet(4,8, 200, "hero");
+
+
+GameState.prototype.HandleEvent = function(event){
+	if (event.keyCode == KB_SPACE) {	// Pressing "enter"
+		this.hero.isRunning = !this.hero.isRunning ;
+	}
+}
 
 GameState.prototype.Update = function (modifier) {
 	var animate = false;

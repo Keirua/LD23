@@ -20,6 +20,7 @@ const KB_LEFT = 37;
 const KB_RIGHT = 39;
 const KB_ESCAPE = 27;
 const KB_ENTER = 13;
+const KB_SPACE = 32;
 
 ///////////////////////////////////////////////////////////////////////////////
 // A bunch of drawing utilities. See usage
