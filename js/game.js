@@ -2,11 +2,19 @@
 var GAME_WIDTH = 600;
 var GAME_HEIGHT = 480;
 
-var WORLD_WIDTH = 2000;
-var WORLD_HEIGHT = 2000;
-var NB_TREES = 20;
+var WORLD_WIDTH = 4000;
+var WORLD_HEIGHT = 4000;
+var NB_TREES = 100;
 var FLOOR_SIZE = 32;
 
+var START_AREA_SIZE = WORLD_WIDTH * 0.1; // 10 % of the total game area
+
+var start_area = {
+	x : WORLD_WIDTH/2 - START_AREA_SIZE/2,
+	y : WORLD_HEIGHT/2 - START_AREA_SIZE/2,
+	w : START_AREA_SIZE,
+	h : START_AREA_SIZE,
+};
 
 //Create a sound 
 // /!\ Does not work in firefox
@@ -19,7 +27,8 @@ var objToLoad = [
 	"hero",
 	// "background",
 	"tree",
-	"floor_tileset"
+	"floor_tileset",
+	"spacecraft"
 ];
 
 g_DataCache.queue = objToLoad;
@@ -72,13 +81,16 @@ Monster.prototype.generatePath = function(){
 	
 	for (var i = 0; i < nb; i = i+1){
 	
-		var dx = rnd (min_dist, max_dist) * rndsign();
-		var dy = rnd (min_dist, max_dist) * rndsign();
+		var newpos = {};
+		do{
+			var dx = rnd (min_dist, max_dist) * rndsign();
+			var dy = rnd (min_dist, max_dist) * rndsign();
+			newpos.x = prev.x + rndsign() * dx;
+			newpos.y = prev.y + rndsign() * dy;
+		}while ((newpos.x < 0 && newpos.x > WORLD_WIDTH) && (newpos.y < 0 && newpos.x > WORLD_WIDTH));
 		
-		that.path[i+1] = {
-			x : prev.x + rndsign() * dx,
-			y : prev.y + rndsign() * dy
-		}
+		that.path[i+1] = newpos;
+		
 		prev = that.path[i+1];
 	}
 }
@@ -138,6 +150,7 @@ GameState = function(){
 	this.nbObstacles = NB_TREES;
 	this.nbMonsters = NB_TREES;
 	this.floor_tiles = {};
+	this.foundEveryBody = false;
 }
 
 GameState.prototype = {
@@ -160,7 +173,10 @@ GameState.prototype = {
 	viewport:{},
 	obstacles:{}, // stuff blocking the payer
 	nbObstacles:10,
-	target:{}		// where the player is supposed to go to
+	target:{},		// where the player is supposed to go to
+	
+	targets_found:{},
+	targets:{}
 }
 
 
@@ -222,16 +238,36 @@ GameState.prototype.UpdatePlayer = function (modifier){
 	}
 	if (this.collideWorld ({x:this.hero.x, y:newpos.y, w: 32, h: 32}) == false)
 	{
-				this.hero.y = newpos.y;
+		this.hero.y = newpos.y;
+		if (this.hero.y < 0){
+			this.hero.y = WORLD_HEIGHT-this.hero.y;
+			this.viewport.y  += WORLD_HEIGHT;
+		}
+		else if (this.hero.y > WORLD_HEIGHT){
+			this.hero.y = WORLD_HEIGHT-this.hero.y;
+			this.viewport.y  -= WORLD_HEIGHT;
+		}	
 	}
 	if (this.collideWorld ({x:newpos.x, y:this.hero.y, w: 32, h: 32}) == false)
 	{
 		this.hero.x = newpos.x;
+		if (this.hero.x < 0){
+			this.hero.x = WORLD_WIDTH-this.hero.x;
+			this.viewport.x  += WORLD_WIDTH;
+		}
+		else if (this.hero.x > WORLD_HEIGHT){
+			this.hero.x = WORLD_WIDTH-this.hero.x;
+			this.viewport.x  -= WORLD_WIDTH;
+		}	
 	}
 	
 	if (KB_ESCAPE in gameEngine.keysDown) {
 		gameEngine.ChangeState("menu");
 	}
+	
+	// check if the player didn't collide with an ennmy
+	this.CheckDeathLogic();
+	this.CheckTargetsLogic();
 	
 	// Very basic viewport management: when we get closer to the edge, move the viewport
 	if (this.hero.x +32 < this.viewport.x + (GAME_WIDTH * this.scrollingRatio))
@@ -252,6 +288,55 @@ GameState.prototype.UpdateAI = function (modifier){
 		this.monsters[key].update(modifier);
 	}
 }
+		
+GameState.prototype.CheckTargetsLogic = function(){
+	var size = 32;
+	if (this.foundEveryBody == false)
+	{
+		for (var t in this.targets){
+			var target = this.targets[t];
+			if (this.hero.x + size > target.x && this.hero.x < (target.x + size)
+			&& this.hero.y + size > target.y && this.hero.y < (target.y + size)
+			&& this.targets_found[t] == false)
+			{
+				this.targets_found[t] = true;
+				
+				bullet_sound.play();
+				gameEngine.effects.push ( new FadeEffect ("rgb(255, 255, 255)", 0.3, false) );
+			}
+		}
+	}
+	else
+	{
+		var target = {
+			x : WORLD_WIDTH/2,
+			y : WORLD_WIDTH/2
+		};
+		if (this.hero.x + size > target.x && this.hero.x < (target.x + 2*size)
+			&& this.hero.y + size > target.y && this.hero.y < (target.y + 2*size))
+		{
+			gameEngine.ChangeState ("win");
+		}
+	}
+}
+		
+GameState.prototype.CheckDeathLogic = function (modifier){
+	for (key in this.monsters){
+		var currMonster = this.monsters[key]
+		// if (intersects (this.hero, currMonster) == true){
+		/*
+		if (RectA.X1 < RectB.X2 && RectA.X2 > RectB.X1 &&
+    RectA.Y1 < RectB.Y2 && RectA.Y2 > RectB.Y1)*/
+		var size = 32;
+		if  (this.hero.x + 0.8*size > currMonster.x && this.hero.x < (currMonster.x + 0.8*size)
+		&& this.hero.y + 0.8*size > currMonster.y && this.hero.y < (currMonster.y + 0.8*size)
+		)
+		{
+			// Yep, like this. I could have a bit softer, but hey.
+			// gameEngine.ChangeState("death");
+		}
+	}
+}
 
 GameState.prototype.Update = function (modifier) {
 	this.UpdatePlayer (modifier);
@@ -264,9 +349,9 @@ GameState.prototype.Update = function (modifier) {
 		&& this.hero.y <= (this.target.y + 32)
 		&& this.target.y <= (this.hero.y + 32)
 	) {
-		this.Reset();
-		bullet_sound.play();
-		gameEngine.effects.push ( new FadeEffect ("rgb(255, 255, 255)", 0.3, false) );
+		// this.Reset();
+		// bullet_sound.play();
+		// gameEngine.effects.push ( new FadeEffect ("rgb(255, 255, 255)", 0.3, false) );
 	}
 };
 
@@ -320,13 +405,19 @@ GameState.prototype.Draw = function () {
 
 GameState.prototype.IsOverlappingWorld = function(item){
 	var res = false;
-	for (obst in this.obstacles){
-		if (intersects (item, this.obstacles[obst]))
-		{
-			res = true;
+	if (intersects (item, start_area))
+	{
+		res = true;
+	}
+	else
+	{
+		for (obst in this.obstacles){
+			if (intersects (item, this.obstacles[obst]))
+			{
+				res = true;
+			}
 		}
 	}
-
 	return res;
 }
 
@@ -362,25 +453,48 @@ GameState.prototype.CreateWorld = function () {
 	}
 	var target = this.generateRandomPosition (32, 32);
 	
+	var nb_targets = 4;
+	
+	for (i = 0; i < nb_targets; i = i+1){
+		this.targets_found[i] = false;
+		this.targets[i] = {
+			x : rnd (start_area.x, START_AREA_SIZE),
+			y : rnd (start_area.y, START_AREA_SIZE)
+		};
+	}
+	
 	this.target.x = target.x
 	this.target.y = target.y;
+}
+
+var clampBetweenZeroAnd = function(max, value){
+	var res = value;
+	do{
+		res = res + max
+	}while (res < 0);
+	do{
+		res = res - max
+	}while (res > max);
+	return res;
 }
 
 GameState.prototype.DrawFloor = function(){
 	var sizex = Math.ceil(GAME_WIDTH/FLOOR_SIZE);
 	var sizey = Math.ceil(GAME_HEIGHT/FLOOR_SIZE);
 	var image = g_DataCache.getImage("floor_tileset");
-	
+	/*
 	for (i = 0; i < sizex; i = i+1)
 		for (j = 0; j < sizey; j = j+1)
 		{
-			var xdiv = (this.viewport.x + i * FLOOR_SIZE) / FLOOR_SIZE;
-			var ydiv = (this.viewport.y + j * FLOOR_SIZE) / FLOOR_SIZE;
+			var vx = clampBetweenZeroAnd(GAME_WIDTH, this.viewport.x);
+			var vy = clampBetweenZeroAnd(GAME_HEIGHT, this.viewport.y);
+			var xdiv = Math.floor((vx + i * FLOOR_SIZE) / FLOOR_SIZE);
+			var ydiv = Math.floor((vy + j * FLOOR_SIZE) / FLOOR_SIZE);
 			
 			var id = this.floor_tiles[ydiv*sizey+xdiv];
 			
 			this.context.drawImage(image, id*sizex, 0, FLOOR_SIZE, FLOOR_SIZE, i * sizex, j*sizey, FLOOR_SIZE, FLOOR_SIZE);
-		}
+		} */
 }
 
 GameState.prototype.DrawWorld = function () {
@@ -398,6 +512,15 @@ GameState.prototype.DrawWorld = function () {
 	for (var i = 0; i < this.nbMonsters; i=i+1){
 		this.viewport.DrawSprite ("monster", this.monsters[i].x, this.monsters[i].y, 32, 32);
 	}
+	for (var key in this.targets){
+		var target = this.targets[key];
+		if (this.targets_found[key] == false){
+			this.viewport.DrawRect (target.x, target.y, 32, 32, "#FFFFFF" );
+		}
+	}
+	
+	this.viewport.DrawSprite ("spacecraft", WORLD_WIDTH/2, WORLD_HEIGHT/2, 64,64);
+	
 }
 
 GameState.prototype.DrawHUD = function ()
@@ -421,7 +544,6 @@ GameState.prototype.DrawRunningInfos = function (){
 		var MAX_WIDTH = 200;
 		g_Screen.drawRect (10 + MAX_WIDTH, 10, ratio * MAX_WIDTH, 20, "rgb (128, 128, 128)");
 	}
-	
 }
 
 GameState.prototype.DrawCompass = function () {
@@ -431,8 +553,27 @@ GameState.prototype.DrawCompass = function () {
 	var x0 = GAME_WIDTH - (1 + margin)*s; // upper left corner
 	var y0 = margin * s;
 	
-	var px = this.target.x - this.hero.x;
-	var py = this.target.y - this.hero.y;
+	// need to find the closes target
+	var bFound = false;
+	var target = {};
+	
+	for (var t in this.targets){
+		if (this.targets_found[t] == false){
+			target = this.targets[t];
+			bFound = true;
+			break;
+		}
+	}
+	if (bFound == false){
+		target = {
+			x : WORLD_WIDTH/2-32,
+			y : WORLD_WIDTH/2-32
+		}
+		this.foundEveryBody = true;
+	}
+	
+	var px = target.x - this.hero.x;
+	var py = target.y - this.hero.y;
 	
 	var len = Math.sqrt (px*px + py*py);
 	px = (0.4 * s) * (px / len);
@@ -455,14 +596,20 @@ GameState.prototype.Reset = function () {
 		canRun: true
 	};
 	
-	var heroPos = this.generateRandomPosition(32,32);
+	// We want to make the play start in the middle of the game area
+	var heroPos = {
+		x : rnd (0, START_AREA_SIZE),
+		y : rnd (0, START_AREA_SIZE),
+	}
 	
-	this.hero.x = heroPos.x/2;
-	this.hero.y = heroPos.y/2;
+	this.hero.x = start_area.x + heroPos.x;
+	this.hero.y = start_area.y + heroPos.y;
 	
 	this.viewport.x = this.hero.x;	
 	this.viewport.y = this.hero.y;
 	this.target = this.generateRandomPosition(32,32);
+	
+	this.foundEveryBody = false;
 };
 
 GameState.prototype.InitFloor = function(){
@@ -482,6 +629,73 @@ GameState.prototype.Init = function () {
 	this.InitFloor ();
 };
 
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Win state
+///////////////////////////////////////////////////////////////////////////////
+WinState = function() {}
+
+WinState.prototype = {
+}
+
+WinState.prototype.Update = function (modifier) {
+};
+	
+WinState.prototype.Draw = function(){
+	// Background
+	g_Screen.drawRect (0,0, GAME_WIDTH, GAME_HEIGHT, "#d0e7f9");
+	
+	// Display the Title
+	g_Screen.clear("rgb(0,0,0)");
+	var col = "rgb(69, 69, 69)";
+	
+	g_Screen.drawCenterText ("You won", GAME_WIDTH/2, GAME_HEIGHT/2-100, col, "26px Helvetica");
+	
+	
+	
+	g_Screen.drawCenterText ("Press enter to start again", GAME_WIDTH/2, GAME_HEIGHT/2 + 100, col, "26px Helvetica");
+}
+
+WinState.prototype.HandleEvent = function(event){
+	if (event.keyCode == KB_ENTER) {
+		gameEngine.ChangeState("menu");
+	}
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Death state
+///////////////////////////////////////////////////////////////////////////////
+DeathState = function() {}
+
+DeathState.prototype = {
+}
+
+DeathState.prototype.Update = function (modifier) {
+};
+	
+DeathState.prototype.Draw = function(){
+	// Background
+	g_Screen.drawRect (0,0, GAME_WIDTH, GAME_HEIGHT, "#d0e7f9");
+	
+	// Display the Title
+	g_Screen.clear("rgb(0,0,0)");
+	var col = "rgb(69, 69, 69)";
+	
+	g_Screen.drawCenterText ("You died", GAME_WIDTH/2, GAME_HEIGHT/2-100, col, "26px Helvetica");
+	
+	g_Screen.drawCenterText ("It was very painful and you suffered a lot", GAME_WIDTH/2, GAME_HEIGHT/2, col, "26px Helvetica");
+	
+	g_Screen.drawCenterText ("Now press enter to do something better", GAME_WIDTH/2, GAME_HEIGHT/2 + 100, col, "26px Helvetica");
+}
+
+DeathState.prototype.HandleEvent = function(event){
+	if (event.keyCode == KB_ENTER) {
+		gameEngine.ChangeState("menu");
+	}
+}
 
 
 
@@ -535,9 +749,8 @@ MenuState.prototype.HandleEvent = function(event){
 			// currState = 1;
 			gameEngine.effects.push ( new FadeEffect ("rgb(255, 255, 255)", 0.3, false) );
 		}
-		else if (this.activeItem == 2)
+		else if (this.activeItem == 1)
 		{
-			// currState = 2;
 			gameEngine.ChangeState("credit");
 			creditState.Init();
 			gameEngine.effects.push ( new FadeEffect ("rgb(255, 255, 255)", 0.3, false) );
@@ -585,7 +798,6 @@ CreditState.prototype.Draw = function () {
 	g_Screen.drawText ("" + this.timer.ChronoString(), 100, 100, "rgb(0, 250, 250)", "24px Helvetica");
 }
 
-
 ///////////////////////////////////////////////////////////////////////////////
 // Our application
 // Initialization of the global variables (the different states + the engine)
@@ -603,11 +815,15 @@ var g_Screen = new Screen (gameEngine);
 var menuState = new MenuState();
 var gameState = new GameState();
 var creditState = new CreditState();
+var deathState = new DeathState();
+var winState = new WinState();
 
 gameEngine.states = {
 		menu:menuState,
 		game:gameState,
-		credit:creditState
+		credit:creditState,
+		death:deathState,
+		win:winState,
 	};
 
 gameEngine.Init();
