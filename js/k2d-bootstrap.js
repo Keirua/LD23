@@ -402,5 +402,5 @@ K2DEngine.prototype.UpdateEffects = function(dt){
 
 K2DEngine.prototype.RenderLoadingScreen = function(){
 	that.screen.drawRect (0,0, GAME_WIDTH, GAME_HEIGHT, "#d0e7f9");
-	that.screen.drawCenterText ("" + that.datacache.Percentage()*100 + " %", GAME_WIDTH/2, GAME_HEIGHT/2, "red", "30pt Calibri");
+	that.screen.drawCenterText ("" + (that.datacache.Percentage()*100).toFixed(2) + " %", GAME_WIDTH/2, GAME_HEIGHT/2, "red", "30pt Calibri");
 }

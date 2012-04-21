@@ -2,11 +2,11 @@
 var GAME_WIDTH = 600;
 var GAME_HEIGHT = 480;
 
-// var WORLD_WIDTH = 4000;
-// var WORLD_HEIGHT = 4000;
-
+var WORLD_WIDTH = 12000;
+var WORLD_HEIGHT = 12000;
+/*
 var WORLD_WIDTH = GAME_WIDTH;
-var WORLD_HEIGHT = GAME_HEIGHT;
+var WORLD_HEIGHT = GAME_HEIGHT;*/
 
 
 
@@ -25,12 +25,23 @@ var objToLoad = [
 
 g_DataCache.queue = objToLoad;
 
-var rnd = function (mini, maxi){
-	return mini + Math.floor(Math.random()*(maxi-mini));
+var rnd = function(from,to)
+{
+    return Math.floor(Math.random()*(to-from+1)+from);
 }
 
+// randomly returns +1 or -1
+var rndsign = function (mini, maxi){
+	return (Math.random()*1000 > 500) ? -1 : 1;
+}
+
+var MONSTER_PATH = 0; // monster currently following a path
+var MONSTER_HUNT = 1; // monster is hunting the player, moving faster and stuff
+var MONSTER_IDLE = 2; // monster is doing nothing 
+
 Monster = function(){
-	
+	this.path = {};
+	this.currStep = 0;
 }
 
 Monster.prototype = {
@@ -38,14 +49,84 @@ Monster.prototype = {
 	y : 0,
 	w : 32,
 	h : 32,
-	path : {}
+	speed : 50,
+	path : {},
+	nbPoints : 0,
+	currStep : 0,
+	currState : MONSTER_IDLE // we will later see what to do with others states
 }
 
+// Generates a path that the monster will follow
 Monster.prototype.generatePath = function(){
-	/*for (var i = 0; i < rnd (0, 10); i = i+1) {
-		// path[i]
-	}*/
+	var that = this;
+	var prev = {
+		x: that.x,
+		y: that.y
+	};
+	
+	that.path[0] = prev;
+	
+	var nb = rnd (10, 100);
+	that.nbPoints = 1 + nb;
+	
+	var min_dist = 20, max_dist = 100;
+	
+	for (var i = 0; i < nb; i = i+1){
+	
+		var dx = rnd (min_dist, max_dist) * rndsign();
+		var dy = rnd (min_dist, max_dist) * rndsign();
+		
+		that.path[i+1] = {
+			x : prev.x + rndsign() * dx,
+			y : prev.y + rndsign() * dy
+		}
+		prev = that.path[i+1];
+	}
 }
+
+var vectorLength = function (v){
+	return Math.sqrt (v.x * v.x + v.y * v.y);
+}
+
+var vectorNormalize = function (dir){
+	var len = vectorLength(dir);
+	if ( len < 0.01) 
+		len = 0.01;
+		var res = {
+			x : dir.x / len,
+			y : dir.y / len
+			}
+	return res;
+}
+
+Monster.prototype.update = function (dt){
+	if (this.currState == MONSTER_PATH){
+		var curr = this.path[this.currStep];
+		var nextStep = ((this.currStep + 1) >= this.nbPoints) ? 0 : (this.currStep + 1);
+		var next = this.path[nextStep];
+		var dir = {
+			x : next.x - this.x,
+			y : next.y - this.y
+		};
+		var l = {
+			x : next.x - this.x,
+			y : next.y - this.y
+		}
+		
+		dir = vectorNormalize (dir);
+		
+		this.x = this.x + dir.x * dt * this.speed;
+		this.y = this.y + dir.y * dt * this.speed;
+		
+		if (vectorLength (l) < 10)
+		{
+			this.currStep = this.currStep +1;
+			if (this.currStep  > this.nbPoints)
+				this.currStep = 0;
+		}
+	}
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // Game state
 ///////////////////////////////////////////////////////////////////////////////
@@ -65,7 +146,7 @@ GameState.prototype = {
 		isRunning:false,
 		canRun: true
 	},
-	scrollingRatio:0.3,
+	scrollingRatio:0.45,
 	
 	nbMonsters : 10,
 	monsters : {},
@@ -74,8 +155,7 @@ GameState.prototype = {
 	runWaitingTime: 2000, // when you are done running, how long you have to wait before being able to run again
 	viewport:{},
 	obstacles:{}, // stuff blocking the payer
-	nbObstacles:6,
-	nbEnnemis:10,
+	nbObstacles:10,
 	target:{}		// where the player is supposed to go to
 }
 
@@ -93,7 +173,8 @@ GameState.prototype.HandleEvent = function(event){
 	}
 }
 
-GameState.prototype.Update = function (modifier) {
+GameState.prototype.UpdatePlayer = function (modifier){
+
 	var animate = false;
 	// Running management
 	if (this.hero.isRunning == true){
@@ -160,6 +241,18 @@ GameState.prototype.Update = function (modifier) {
 	
 	heroSprite.SetAnimated(animate);
 	heroSprite.Animate();
+}
+
+GameState.prototype.UpdateAI = function (modifier){
+	for (key in this.monsters){
+		this.monsters[key].update(modifier);
+	}
+}
+
+GameState.prototype.Update = function (modifier) {
+	this.UpdatePlayer (modifier);
+	this.UpdateAI (modifier);
+	
 	// Are they touching?
 	if (
 		this.hero.x <= (this.target.x + 32)
@@ -236,8 +329,8 @@ GameState.prototype.IsOverlappingWorld = function(item){
 GameState.prototype.generateRandomPosition = function (w, h){
 	var curr = {};
 	do {
-		curr.x = rnd (0, WORLD_WIDTH);
-		curr.y = rnd (0, WORLD_HEIGHT);
+		curr.x = rnd (0, 2*GAME_WIDTH);
+		curr.y = rnd (0, 2*GAME_HEIGHT);
 		curr.w = w;
 		curr.h = h;
 	}while (this.IsOverlappingWorld (curr));
@@ -260,6 +353,8 @@ GameState.prototype.CreateWorld = function () {
 		this.monsters[i].y = curr.y;
 		
 		this.monsters[i].generatePath();
+		this.monsters[i].currState = MONSTER_PATH;
+		
 	}
 	var target = this.generateRandomPosition (32, 32);
 	
@@ -338,16 +433,6 @@ GameState.prototype.Reset = function () {
 	this.viewport.y = this.hero.y;
 	this.target = this.generateRandomPosition(32,32);
 };
-
-
-
-
-
-
-
-
-
-
 
 
 
