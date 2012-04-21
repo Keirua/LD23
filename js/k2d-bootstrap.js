@@ -371,7 +371,7 @@ K2DEngine.prototype.GameLoop = function () {
 	var now = Date.now();
 	var delta = now - prevDate;
 
-	that.screen.clear("rgb(0,0,0)");
+	that.screen.clear("#3F8630");
 	that.Update(delta / 1000);
 	that.Draw();
 

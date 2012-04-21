@@ -2,12 +2,10 @@
 var GAME_WIDTH = 600;
 var GAME_HEIGHT = 480;
 
-var WORLD_WIDTH = 12000;
-var WORLD_HEIGHT = 12000;
-/*
-var WORLD_WIDTH = GAME_WIDTH;
-var WORLD_HEIGHT = GAME_HEIGHT;*/
-
+var WORLD_WIDTH = 2000;
+var WORLD_HEIGHT = 2000;
+var NB_TREES = 20;
+var FLOOR_SIZE = 32;
 
 
 //Create a sound 
@@ -20,7 +18,8 @@ var objToLoad = [
 	"monster",
 	"hero",
 	// "background",
-	"tree"
+	"tree",
+	"floor_tileset"
 ];
 
 g_DataCache.queue = objToLoad;
@@ -136,6 +135,9 @@ GameState = function(){
 	this.runTimer = new Timer();
 	this.waitTimer = new Timer();
 	this.obstacles = {};
+	this.nbObstacles = NB_TREES;
+	this.nbMonsters = NB_TREES;
+	this.floor_tiles = {};
 }
 
 GameState.prototype = {
@@ -150,6 +152,8 @@ GameState.prototype = {
 	
 	nbMonsters : 10,
 	monsters : {},
+	
+	floor_tiles : {},
 	
 	runDuration: 2000, // How long one can run
 	runWaitingTime: 2000, // when you are done running, how long you have to wait before being able to run again
@@ -329,8 +333,8 @@ GameState.prototype.IsOverlappingWorld = function(item){
 GameState.prototype.generateRandomPosition = function (w, h){
 	var curr = {};
 	do {
-		curr.x = rnd (0, 2*GAME_WIDTH);
-		curr.y = rnd (0, 2*GAME_HEIGHT);
+		curr.x = rnd (0, WORLD_WIDTH);
+		curr.y = rnd (0, WORLD_HEIGHT);
 		curr.w = w;
 		curr.h = h;
 	}while (this.IsOverlappingWorld (curr));
@@ -362,10 +366,34 @@ GameState.prototype.CreateWorld = function () {
 	this.target.y = target.y;
 }
 
+GameState.prototype.DrawFloor = function(){
+	var sizex = Math.ceil(GAME_WIDTH/FLOOR_SIZE);
+	var sizey = Math.ceil(GAME_HEIGHT/FLOOR_SIZE);
+	var image = g_DataCache.getImage("floor_tileset");
+	
+	for (i = 0; i < sizex; i = i+1)
+		for (j = 0; j < sizey; j = j+1)
+		{
+			var xdiv = (this.viewport.x + i * FLOOR_SIZE) / FLOOR_SIZE;
+			var ydiv = (this.viewport.y + j * FLOOR_SIZE) / FLOOR_SIZE;
+			
+			var id = this.floor_tiles[ydiv*sizey+xdiv];
+			
+			this.context.drawImage(image, id*sizex, 0, FLOOR_SIZE, FLOOR_SIZE, i * sizex, j*sizey, FLOOR_SIZE, FLOOR_SIZE);
+		}
+}
+
 GameState.prototype.DrawWorld = function () {
+	this.DrawFloor ();
+	
 	this.viewport.DrawRect(this.target.x, this.target.y, 32,32, "rgb(0, 200, 0)");
 	for (var i = 0; i < this.nbObstacles; i=i+1){
 		this.viewport.DrawSprite ("tree", this.obstacles[i].x, this.obstacles[i].y, 128, 128);
+		
+		this.viewport.DrawSprite ("tree", this.obstacles[i].x + WORLD_WIDTH, this.obstacles[i].y, 128, 128);
+		this.viewport.DrawSprite ("tree", this.obstacles[i].x - WORLD_WIDTH, this.obstacles[i].y, 128, 128);
+		this.viewport.DrawSprite ("tree", this.obstacles[i].x, this.obstacles[i].y + WORLD_HEIGHT, 128, 128);
+		this.viewport.DrawSprite ("tree", this.obstacles[i].x, this.obstacles[i].y - WORLD_HEIGHT, 128, 128);
 	}
 	for (var i = 0; i < this.nbMonsters; i=i+1){
 		this.viewport.DrawSprite ("monster", this.monsters[i].x, this.monsters[i].y, 32, 32);
@@ -375,6 +403,9 @@ GameState.prototype.DrawWorld = function () {
 GameState.prototype.DrawHUD = function ()
 {
 	this.DrawRunningInfos ();
+	var px = this.hero.x.toFixed (2);
+	var py = this.hero.y.toFixed (2);
+	g_Screen.drawText ("Position : " + px + "x" + py, 32, 80, "rgb(0, 250, 250)", "24px Helvetica");
 	this.DrawCompass ();
 }
 
@@ -426,15 +457,30 @@ GameState.prototype.Reset = function () {
 	
 	var heroPos = this.generateRandomPosition(32,32);
 	
-	this.hero.x = heroPos.x;
-	this.hero.y = heroPos.y;
+	this.hero.x = heroPos.x/2;
+	this.hero.y = heroPos.y/2;
 	
 	this.viewport.x = this.hero.x;	
 	this.viewport.y = this.hero.y;
 	this.target = this.generateRandomPosition(32,32);
 };
 
+GameState.prototype.InitFloor = function(){
+	var sizex = Math.ceil(GAME_WIDTH/FLOOR_SIZE);
+	var sizey = Math.ceil(GAME_HEIGHT/FLOOR_SIZE);
+	
+	for (i = 0; i < sizex; i = i+1)
+		for (j = 0; j < sizey; j = j+1)
+		{
+			var id = rnd (0, 8);
+			this.floor_tiles [j * sizex + i] = id;
+		}
+}
 
+GameState.prototype.Init = function () {
+	this.Reset ();
+	this.InitFloor ();
+};
 
 
 
@@ -479,10 +525,13 @@ MenuState.prototype.Draw = function(){
 	}
 }
 
+
+
 MenuState.prototype.HandleEvent = function(event){
 	if (event.keyCode == KB_ENTER) {	// Pressing "enter"
 		if (this.activeItem == 0){
 			gameEngine.ChangeState("game");
+			gameState.Init();
 			// currState = 1;
 			gameEngine.effects.push ( new FadeEffect ("rgb(255, 255, 255)", 0.3, false) );
 		}
@@ -553,7 +602,6 @@ var g_Screen = new Screen (gameEngine);
 
 var menuState = new MenuState();
 var gameState = new GameState();
-// gameState.Reset();
 var creditState = new CreditState();
 
 gameEngine.states = {
