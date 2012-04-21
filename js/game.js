@@ -43,6 +43,7 @@ GameState.prototype = {
 	monstersCaught : 0,
 	viewport:{},
 	obstacles:{}, // stuff blocking the payer
+	nbObstacles:5,
 	target:{}		// where the player is supposed to go to
 }
 
@@ -68,39 +69,53 @@ GameState.prototype.Update = function (modifier) {
 	else{
 		this.hero.speed = this.hero.defaultSpeed;
 	}
-	
+	var newpos = {
+		x:this.hero.x,
+		y:this.hero.y
+		
+	};
 	if (KB_UP in gameEngine.keysDown) {
-		this.hero.y -= this.hero.speed * modifier;
+		newpos.y -=  this.hero.speed * modifier;
 		heroSprite.SetState (1);
 		animate = true;
 	}
 	if (KB_DOWN in gameEngine.keysDown) {
-		this.hero.y += this.hero.speed * modifier;
+		newpos.y +=  this.hero.speed * modifier;
 		heroSprite.SetState (0);
 		animate = true;
 	}
 	if (KB_LEFT in gameEngine.keysDown) {
-		this.hero.x -= this.hero.speed * modifier;
+		newpos.x -= this.hero.speed * modifier;
 		heroSprite.SetState (2);
 		animate = true;
 	}
 	if (KB_RIGHT in gameEngine.keysDown) {
-		this.hero.x += this.hero.speed * modifier;
+		newpos.x += this.hero.speed * modifier;
 		heroSprite.SetState (3);
 		animate = true;
 	}
+	if (this.collideWorld ({x:this.hero.x, y:newpos.y}, 32, 32) == false)
+	{
+				this.hero.y = newpos.y;
+	}
+	if (this.collideWorld ({x:newpos.x, y:this.hero.y}, 32, 32) == false)
+	{
+
+		this.hero.x = newpos.x;
+	}
+	
 	if (KB_ESCAPE in gameEngine.keysDown) {
 		gameEngine.ChangeState("menu");
 	}
 	
 	// Very basic viewport management: when we get closer to the edge, move the viewport
-	if (this.hero.x < this.viewport.x + (GAME_WIDTH * this.scrollingRatio))
+	if (this.hero.x +32 < this.viewport.x + (GAME_WIDTH * this.scrollingRatio))
 		this.viewport.x -= this.hero.speed * modifier;
-	if (this.hero.x +32> (this.viewport.x + GAME_WIDTH) - (GAME_WIDTH * this.scrollingRatio))
+	if (this.hero.x > (this.viewport.x + GAME_WIDTH) - (GAME_WIDTH * this.scrollingRatio))
 		this.viewport.x += this.hero.speed * modifier;
-	if (this.hero.y < this.viewport.y + (GAME_HEIGHT * this.scrollingRatio))
+	if (this.hero.y +32 < this.viewport.y + (GAME_HEIGHT * this.scrollingRatio))
 		this.viewport.y -= this.hero.speed * modifier;
-	if (this.hero.y +32> (this.viewport.y + GAME_HEIGHT) - (GAME_HEIGHT * this.scrollingRatio))
+	if (this.hero.y> (this.viewport.y + GAME_HEIGHT) - (GAME_HEIGHT * this.scrollingRatio))
 		this.viewport.y += this.hero.speed * modifier;
 	
 	heroSprite.SetAnimated(animate);
@@ -119,6 +134,28 @@ GameState.prototype.Update = function (modifier) {
 	}
 };
 
+GameState.prototype.collideWorld = function (newpos, w, h){
+	var isColliding = false;
+	var ratio = 0.2; // We want 20% off
+	
+	for (var i = 0; i < this.nbObstacles; i=i+1){
+		var ow = 128; // obstacle width
+		var oh = 128;
+		
+		if (
+			newpos.x + w > (this.obstacles[i].x + ratio * ow)
+			&& newpos.x <= (this.obstacles[i].x + (1-ratio) * ow)
+			&& newpos.y +h >(this.obstacles[i].y + ratio * oh)
+			&& newpos.y <= (this.obstacles[i].y + (1-ratio) * oh)
+		)
+		{
+			isColliding = true;
+		}
+	}
+
+	return isColliding;
+}
+
 // Draw everything
 GameState.prototype.Draw = function () {
 	if (g_DataCache.done())
@@ -126,7 +163,7 @@ GameState.prototype.Draw = function () {
 		// this.viewport.DrawSprite ("background", 0, 0, gameEngine.canvas.width, gameEngine.canvas.height);
 		this.DrawWorld();
 		
-		this.viewport.DrawSprite ("tree", 128, 128, 128, 128);
+		// this.viewport.DrawSprite ("tree", 128, 128, 128, 128);
 		heroSprite.Draw(g_DataCache, this.viewport, this.hero.x, this.hero.y);
 		// this.viewport.DrawSprite ("monster", this.monster.x, this.monster.y, 32, 32);
 	}
@@ -140,7 +177,7 @@ GameState.prototype.CreateWorld = function () {
 	this.target.x = rnd (0, GAME_WIDTH);
 	this.target.y = rnd (0, GAME_HEIGHT)
 
-	for (var i = 0; i < 4; i=i+1){
+	for (var i = 0; i < this.nbObstacles; i=i+1){
 		var curr = ({
 			x: rnd (0, GAME_WIDTH),
 			y: rnd (0, GAME_HEIGHT)
@@ -154,7 +191,7 @@ GameState.prototype.CreateWorld = function () {
 
 GameState.prototype.DrawWorld = function () {
 	this.viewport.DrawRect(this.target.x, this.target.y, 32,32, "rgb(0, 200, 0)");
-	for (var i = 0; i < 4; i=i+1){
+	for (var i = 0; i < this.nbObstacles; i=i+1){
 		this.viewport.DrawSprite ("tree", this.obstacles[i].x, this.obstacles[i].y, 128, 128);
 	}
 	// 
@@ -177,12 +214,6 @@ GameState.prototype.DrawCompass = function () {
 	g_Screen.drawRect(x0, y0, s, s, "rgb(0, 250, 250)");
 	g_Screen.drawText ("Distance : " + (len*0.1).toFixed (2), 32, 32, "rgb(0, 250, 250)", "24px Helvetica");
 	g_Screen.drawLine (x0 + s/2, y0 + s/2, px + x0 + s/2, py + y0 + s/2, "rgb(255, 0, 0)");
-	/*
-	this.context.beginPath();
-    this.context.moveTo(x0 + s/2, y0 + s/2);
-    this.context.lineTo(px + x0 + s/2, py + y0 + s/2);
-    this.context.closePath();
-    this.context.stroke();*/
 };
 
 
