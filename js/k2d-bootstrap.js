@@ -37,6 +37,15 @@ Screen.prototype.drawRect = function (px, py, sizex, sizey, col){
 	this.context.fill();
 }
 
+Screen.prototype.drawLine = function (px, py, px2, py2, col){
+	this.context.fillStyle = col;
+	this.context.beginPath();
+    this.context.moveTo(px, py);
+    this.context.lineTo(px2, py2);
+    this.context.closePath();
+    this.context.stroke();
+}
+
 Screen.prototype.drawText = function (text, x, y, color, font){
 	this.context.fillStyle = color;
 	this.context.font = font;

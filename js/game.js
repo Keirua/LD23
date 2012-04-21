@@ -1,5 +1,5 @@
 // Heavily based on http://www.lostdecadegames.com/how-to-make-a-simple-html5-canvas-game/
-var GAME_WIDTH = 512;
+var GAME_WIDTH = 600;
 var GAME_HEIGHT = 480;
 
 //Create a sound 
@@ -11,7 +11,8 @@ g_DataCache = new DataCache();
 var objToLoad = [
 	"monster",
 	"hero",
-	"background"
+	"background",
+	"tree"
 ];
 
 g_DataCache.queue = objToLoad;
@@ -20,6 +21,188 @@ g_DataCache.queue = objToLoad;
 document.onmousemove = function (event){
 	// alert("Hey");
 }
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Game state
+///////////////////////////////////////////////////////////////////////////////
+GameState = function(){
+	this.viewport = new Viewport(gameEngine);
+	this.context = gameEngine.context;
+	this.runTimer = new Timer();
+	this.obstacles 
+}
+
+GameState.prototype = {
+	hero : {
+		defaultSpeed: 128,
+		speed: 128, // movement in pixels per second
+		run: true,
+		isRunning:false
+	},
+	scrollingRatio:0.3,
+	monster : {},
+	monstersCaught : 0,
+	viewport:{},
+	obstacles:{}
+}
+
+var rnd = function (mini, maxi){
+	return mini + Math.floor(Math.random()*(maxi-mini));
+}
+
+// We want a spritesheet with 4 states, each state containing 8 images.
+var heroSprite = new SpriteSheet(4,8, 200, "hero");
+
+GameState.prototype.Update = function (modifier) {
+	var animate = false;
+	if (this.hero.isRunning == true){
+		this.hero.speed = this.hero.defaultSpeed * 2;
+	}
+	else{
+		this.hero.speed = this.hero.defaultSpeed;
+	}
+	
+	if (KB_UP in gameEngine.keysDown) {
+		this.hero.y -= this.hero.speed * modifier;
+		heroSprite.SetState (1);
+		animate = true;
+	}
+	if (KB_DOWN in gameEngine.keysDown) {
+		this.hero.y += this.hero.speed * modifier;
+		heroSprite.SetState (0);
+		animate = true;
+	}
+	if (KB_LEFT in gameEngine.keysDown) {
+		this.hero.x -= this.hero.speed * modifier;
+		heroSprite.SetState (2);
+		animate = true;
+	}
+	if (KB_RIGHT in gameEngine.keysDown) {
+		this.hero.x += this.hero.speed * modifier;
+		heroSprite.SetState (3);
+		animate = true;
+	}
+	if (KB_ESCAPE in gameEngine.keysDown) {
+		gameEngine.ChangeState("menu");
+	}
+	
+	// Very basic viewport management: when we get closer to the edge, move the viewport
+	if (this.hero.x < this.viewport.x + (GAME_WIDTH * this.scrollingRatio))
+		this.viewport.x -= this.hero.speed * modifier;
+	if (this.hero.x +32> (this.viewport.x + GAME_WIDTH) - (GAME_WIDTH * this.scrollingRatio))
+		this.viewport.x += this.hero.speed * modifier;
+	if (this.hero.y < this.viewport.y + (GAME_HEIGHT * this.scrollingRatio))
+		this.viewport.y -= this.hero.speed * modifier;
+	if (this.hero.y +32> (this.viewport.y + GAME_HEIGHT) - (GAME_HEIGHT * this.scrollingRatio))
+		this.viewport.y += this.hero.speed * modifier;
+	
+	heroSprite.SetAnimated(animate);
+	heroSprite.Animate();
+	// Are they touching?
+	if (
+		this.hero.x <= (this.monster.x + 32)
+		&& this.monster.x <= (this.hero.x + 32)
+		&& this.hero.y <= (this.monster.y + 32)
+		&& this.monster.y <= (this.hero.y + 32)
+	) {
+		this.Reset();
+		++this.monstersCaught;
+		bullet_sound.play();
+		gameEngine.effects.push ( new FadeEffect ("rgb(255, 255, 255)", 0.3, false) );
+	}
+};
+
+// Draw everything
+GameState.prototype.Draw = function () {
+	if (g_DataCache.done())
+	{
+		this.viewport.DrawSprite ("background", 0, 0, gameEngine.canvas.width, gameEngine.canvas.height);
+		this.DrawWorld();
+		
+		this.viewport.DrawSprite ("tree", 128, 128, 128, 128);
+		heroSprite.Draw(g_DataCache, this.viewport, this.hero.x, this.hero.y);
+		this.viewport.DrawSprite ("monster", this.monster.x, this.monster.y, 32, 32);
+	}
+
+	// Score
+	
+	this.DrawCompass();
+};
+
+GameState.prototype.CreateWorld = function () {
+	for (var i = 0; i < 4; i=i+1){
+		var curr = ({
+			x: rnd (0, GAME_WIDTH),
+			y: rnd (0, GAME_HEIGHT)
+		});
+		
+		this.obstacles[i] = curr;
+	}
+
+	//this.viewport.DrawSprite ("tree", 128, 128, 128, 128);
+}
+
+GameState.prototype.DrawWorld = function () {
+	for (var i = 0; i < 4; i=i+1){
+		this.viewport.DrawSprite ("tree", this.obstacles[i].x, this.obstacles[i].y, 128, 128);
+	}
+	// 
+}
+
+GameState.prototype.DrawCompass = function () {
+	// Position of the compass
+	var s = 80;
+	var margin = 0.25;
+	var x0 = GAME_WIDTH - (1 + margin)*s; // upper left corner
+	var y0 = margin * s;
+	
+	var px = this.monster.x - this.hero.x;
+	var py = this.monster.y - this.hero.y;
+	var len = Math.sqrt (px*px + py*py);
+	px = (0.4 * s) * (px / len);
+	py = (0.4 * s) *(py / len);
+	
+	g_Screen.drawRect(x0, y0, s, s, "rgb(0, 250, 250)");
+	g_Screen.drawText ("Distance : " + (len*0.1).toFixed (2), 32, 32, "rgb(0, 250, 250)", "24px Helvetica");
+	g_Screen.drawLine (x0 + s/2, y0 + s/2, px + x0 + s/2, py + y0 + s/2, "rgb(255, 0, 0)");
+	/*
+	this.context.beginPath();
+    this.context.moveTo(x0 + s/2, y0 + s/2);
+    this.context.lineTo(px + x0 + s/2, py + y0 + s/2);
+    this.context.closePath();
+    this.context.stroke();*/
+};
+
+
+
+// Reset the game when the player catches a monster
+GameState.prototype.Reset = function () {
+	this.hero.x = gameEngine.canvas.width / 2;
+	this.hero.y = gameEngine.canvas.height / 2;
+
+	// Throw the monster somewhere on the screen randomly
+	this.monster.x = 32 + (Math.random() * (gameEngine.canvas.width - 64));
+	this.monster.y = 32 + (Math.random() * (gameEngine.canvas.height - 64));
+	
+	this.CreateWorld();
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // Menu state
@@ -88,6 +271,7 @@ MenuState.prototype.HandleEvent = function(event){
 	}
 }
 
+
 ///////////////////////////////////////////////////////////////////////////////
 // Game state
 ///////////////////////////////////////////////////////////////////////////////
@@ -117,100 +301,6 @@ CreditState.prototype.Draw = function () {
 	g_Screen.drawText ("" + this.timer.ChronoString(), 100, 100, "rgb(0, 250, 250)", "24px Helvetica");
 }
 
-///////////////////////////////////////////////////////////////////////////////
-// Game state
-///////////////////////////////////////////////////////////////////////////////
-GameState = function(){
-	this.viewport = new Viewport(gameEngine);
-}
-
-GameState.prototype = {
-	hero : {
-		speed: 128, // movement in pixels per second
-	},
-	monster : {},
-	monstersCaught : 0,
-	viewport:{}
-}
-
-// We want a spritesheet with 4 states, each state containing 8 images.
-var heroSprite = new SpriteSheet(4,8, 200, "hero");
-
-GameState.prototype.Update = function (modifier) {
-	var animate = false;
-	
-	if (KB_UP in gameEngine.keysDown) {
-		this.hero.y -= this.hero.speed * modifier;
-		heroSprite.SetState (1);
-		animate = true;
-	}
-	if (KB_DOWN in gameEngine.keysDown) {
-		this.hero.y += this.hero.speed * modifier;
-		heroSprite.SetState (0);
-		animate = true;
-	}
-	if (KB_LEFT in gameEngine.keysDown) {
-		this.hero.x -= this.hero.speed * modifier;
-		heroSprite.SetState (2);
-		animate = true;
-	}
-	if (KB_RIGHT in gameEngine.keysDown) {
-		this.hero.x += this.hero.speed * modifier;
-		heroSprite.SetState (3);
-		animate = true;
-	}
-	if (KB_ESCAPE in gameEngine.keysDown) {
-		gameEngine.ChangeState("menu");
-	}
-	
-	// Very basic viewport management: when we get closer to the edge, move the viewport
-	if (this.hero.x < this.viewport.x + 100)
-		this.viewport.x -= this.hero.speed * modifier;
-	if (this.hero.x +32> this.viewport.x + GAME_WIDTH - 100)
-		this.viewport.x += this.hero.speed * modifier;
-	if (this.hero.y < this.viewport.y + 100)
-		this.viewport.y -= this.hero.speed * modifier;
-	if (this.hero.y +32 > this.viewport.y + GAME_HEIGHT - 100)
-		this.viewport.y += this.hero.speed * modifier;
-	
-	heroSprite.SetAnimated(animate);
-	heroSprite.Animate();
-	// Are they touching?
-	if (
-		this.hero.x <= (this.monster.x + 32)
-		&& this.monster.x <= (this.hero.x + 32)
-		&& this.hero.y <= (this.monster.y + 32)
-		&& this.monster.y <= (this.hero.y + 32)
-	) {
-		this.Reset();
-		++this.monstersCaught;
-		bullet_sound.play();
-		gameEngine.effects.push ( new FadeEffect ("rgb(255, 255, 255)", 0.3, false) );
-	}
-};
-
-// Draw everything
-GameState.prototype.Draw = function () {
-	// if (g_DataCache.done())
-	{
-		this.viewport.DrawSprite ("background", 0, 0, gameEngine.canvas.width, gameEngine.canvas.height);
-		heroSprite.Draw(g_DataCache, this.viewport, this.hero.x, this.hero.y);
-		this.viewport.DrawSprite ("monster", this.monster.x, this.monster.y, 32, 32);
-	}
-
-	// Score
-	g_Screen.drawText ("Goblins caught: " + this.monstersCaught, 32, 32, "rgb(0, 250, 250)", "24px Helvetica");
-};
-
-// Reset the game when the player catches a monster
-GameState.prototype.Reset = function () {
-	this.hero.x = gameEngine.canvas.width / 2;
-	this.hero.y = gameEngine.canvas.height / 2;
-
-	// Throw the monster somewhere on the screen randomly
-	this.monster.x = 32 + (Math.random() * (gameEngine.canvas.width - 64));
-	this.monster.y = 32 + (Math.random() * (gameEngine.canvas.height - 64));
-};
 
 ///////////////////////////////////////////////////////////////////////////////
 // Our application
