@@ -34,6 +34,7 @@ GameState = function(){
 	this.viewport = new Viewport(gameEngine);
 	this.context = gameEngine.context;
 	this.runTimer = new Timer();
+	this.waitTimer = new Timer();
 	this.obstacles = {};
 }
 
@@ -48,6 +49,8 @@ GameState.prototype = {
 	scrollingRatio:0.3,
 	monster : {},
 	monstersCaught : 0,
+	runDuration: 2000, // How long one can run
+	runWaitingTime: 2000, // when you are done running, how long you have to wait before being able to run again
 	viewport:{},
 	obstacles:{}, // stuff blocking the payer
 	nbObstacles:6,
@@ -63,22 +66,35 @@ var heroSprite = new SpriteSheet(4,8, 200, "hero");
 
 GameState.prototype.HandleEvent = function(event){
 	if (event.keyCode == KB_SPACE) {	// Pressing "enter"
-		this.hero.isRunning = !this.hero.isRunning ;
+		if (this.hero.canRun){
+			this.hero.isRunning = true;
+			this.hero.canRun = false; // boolean saying 
+			this.runTimer.Start();
+		}
 	}
 }
 
 GameState.prototype.Update = function (modifier) {
 	var animate = false;
+	// Running management
 	if (this.hero.isRunning == true){
 		this.hero.speed = this.hero.defaultSpeed * 2;
+		if (this.runTimer.Elapsed () > this.runDuration){
+			this.hero.isRunning = false;
+			this.waitTimer.Start();
+		}
 	}
 	else{
 		this.hero.speed = this.hero.defaultSpeed;
+		if (this.hero.canRun == false){
+			if(this.waitTimer.Elapsed () > this.runWaitingTime){
+				this.hero.canRun = true;
+			}
+		}
 	}
 	var newpos = {
 		x:this.hero.x,
 		y:this.hero.y
-		
 	};
 	if (KB_UP in gameEngine.keysDown) {
 		newpos.y -=  this.hero.speed * modifier;
@@ -106,7 +122,6 @@ GameState.prototype.Update = function (modifier) {
 	}
 	if (this.collideWorld ({x:newpos.x, y:this.hero.y, w: 32, h: 32}) == false)
 	{
-
 		this.hero.x = newpos.x;
 	}
 	
@@ -155,16 +170,6 @@ GameState.prototype.collideWorld = function (player){
 		{
 			isColliding = true;
 		}
-		/*
-		if (
-			player.x + player.w > (currObstacle.x + ratio * ow)
-			&& player.x <= (currObstacle.x + (1-ratio) * ow)
-			&& player.y + player.h >(currObstacle.y + ratio * oh)
-			&& player.y <= (currObstacle.y + (1-ratio) * oh)
-		)
-		{
-			isColliding = true;
-		}*/
 	}
 
 	return isColliding;
@@ -191,15 +196,11 @@ GameState.prototype.Draw = function () {
 	{
 		// this.viewport.DrawSprite ("background", 0, 0, gameEngine.canvas.width, gameEngine.canvas.height);
 		this.DrawWorld();
-		
-		// this.viewport.DrawSprite ("tree", 128, 128, 128, 128);
 		heroSprite.Draw(g_DataCache, this.viewport, this.hero.x, this.hero.y);
 		// this.viewport.DrawSprite ("monster", this.monster.x, this.monster.y, 32, 32);
 	}
-
-	// Score
 	
-	this.DrawCompass();
+	this.DrawHUD();
 };
 
 GameState.prototype.IsOverlappingWorld = function(item){
@@ -231,19 +232,9 @@ GameState.prototype.CreateWorld = function () {
 
 	for (var i = 0; i < this.nbObstacles; i=i+1){
 		var curr = this.generateRandomPosition(128, 128);
-		/*var curr = {}
-		
-		do {
-			curr.x = rnd (0, WORLD_WIDTH);
-			curr.y = rnd (0, WORLD_HEIGHT);
-			curr.w = 128;
-			curr.h = 128;
-		}while (this.IsOverlappingWorld (curr));*/
 		
 		this.obstacles[i] = curr;
 	}
-
-	//this.viewport.DrawSprite ("tree", 128, 128, 128, 128);
 }
 
 GameState.prototype.DrawWorld = function () {
@@ -252,6 +243,27 @@ GameState.prototype.DrawWorld = function () {
 		this.viewport.DrawSprite ("tree", this.obstacles[i].x, this.obstacles[i].y, 128, 128);
 	}
 	// 
+}
+
+GameState.prototype.DrawHUD = function ()
+{
+	this.DrawRunningInfos ();
+	this.DrawCompass ();
+}
+
+GameState.prototype.DrawRunningInfos = function (){
+	if (this.hero.isRunning){
+		g_Screen.drawText ("Timer : " + this.runTimer.Elapsed().toFixed(2), 32, 50, "rgb(0, 250, 250)", "24px Helvetica");
+		var ratio = this.runTimer.Elapsed () / this.runDuration;
+		var MAX_WIDTH = 200;
+		g_Screen.drawRect (10 + MAX_WIDTH, 10, -ratio * MAX_WIDTH, 20, "rgb (128, 128, 128)");
+	}else if (this.hero.canRun == false){
+		g_Screen.drawText ("Timer : " + this.waitTimer.Elapsed().toFixed(2), 32, 50, "rgb(0, 250, 250)", "24px Helvetica");
+		var ratio = this.waitTimer.Elapsed () / this.runDuration;
+		var MAX_WIDTH = 200;
+		g_Screen.drawRect (10 + MAX_WIDTH, 10, ratio * MAX_WIDTH, 20, "rgb (128, 128, 128)");
+	}
+	
 }
 
 GameState.prototype.DrawCompass = function () {
@@ -295,8 +307,9 @@ GameState.prototype.Reset = function () {
 	
 	this.hero.x = heroPos.x;
 	this.hero.y = heroPos.y;
-	this.viewport.x = hero.x;	
-	this.viewport.y = hero.y;
+	
+	this.viewport.x = this.hero.x;	
+	this.viewport.y = this.hero.y;
 	this.target = this.generateRandomPosition(32,32);
 };
 
