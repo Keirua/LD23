@@ -27,6 +27,17 @@ g_DataCache.queue = objToLoad;
 document.onmousemove = function (event){
 }
 
+Monster = function(){
+	
+}
+
+Monster.prototype = {
+	x: 0, 
+	y : 0,
+	w : 32,
+	h : 32
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // Game state
 ///////////////////////////////////////////////////////////////////////////////
@@ -47,13 +58,17 @@ GameState.prototype = {
 		canRun: true
 	},
 	scrollingRatio:0.3,
-	monster : {},
+	
+	nbMonsters : 10,
+	monsters : {},
+	
 	monstersCaught : 0,
 	runDuration: 2000, // How long one can run
 	runWaitingTime: 2000, // when you are done running, how long you have to wait before being able to run again
 	viewport:{},
 	obstacles:{}, // stuff blocking the payer
 	nbObstacles:6,
+	nbEnnemis:10,
 	target:{}		// where the player is supposed to go to
 }
 
@@ -227,14 +242,23 @@ GameState.prototype.generateRandomPosition = function (w, h){
 }
 
 GameState.prototype.CreateWorld = function () {
-	this.target.x = rnd (0, WORLD_WIDTH);
-	this.target.y = rnd (0, WORLD_HEIGHT)
-
-	for (var i = 0; i < this.nbObstacles; i=i+1){
+	var i = 0;
+	
+	for (i = 0; i < this.nbObstacles; i=i+1){
 		var curr = this.generateRandomPosition(128, 128);
 		
 		this.obstacles[i] = curr;
 	}
+	
+	for (i = 0; i < this.nbMonsters; i=i+1){
+		var curr = this.generateRandomPosition(32, 32);
+		
+		this.monsters[i] = curr;
+	}
+	var target = this.generateRandomPosition (32, 32);
+	
+	this.target.x = target.x
+	this.target.y = target.y;
 }
 
 GameState.prototype.DrawWorld = function () {
@@ -242,7 +266,9 @@ GameState.prototype.DrawWorld = function () {
 	for (var i = 0; i < this.nbObstacles; i=i+1){
 		this.viewport.DrawSprite ("tree", this.obstacles[i].x, this.obstacles[i].y, 128, 128);
 	}
-	// 
+	for (var i = 0; i < this.nbMonsters; i=i+1){
+		this.viewport.DrawSprite ("monster", this.monsters[i].x, this.monsters[i].y, 32, 32);
+	}
 }
 
 GameState.prototype.DrawHUD = function ()
@@ -285,14 +311,8 @@ GameState.prototype.DrawCompass = function () {
 	g_Screen.drawLine (x0 + s/2, y0 + s/2, px + x0 + s/2, py + y0 + s/2, "rgb(255, 0, 0)");
 };
 
-
-
 // Reset the game when the player catches a monster
 GameState.prototype.Reset = function () {
-	// Throw the monster somewhere on the screen randomly
-	this.monster.x = 32 + (Math.random() * (gameEngine.canvas.width - 64));
-	this.monster.y = 32 + (Math.random() * (gameEngine.canvas.height - 64));
-	
 	this.CreateWorld();
 	
 	this.hero = {
