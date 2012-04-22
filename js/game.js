@@ -58,6 +58,10 @@ var objToLoad = [
 	// "enter_key",
 	"space_key", // finally, I chose not to use it. Only 2 key is easier for the player to understand
 	"arrow_keys",
+	"placeholder",
+	"scene_crew",
+	"scene_alien",
+	"scene_spaceview",
 ];
 
 g_DataCache.queue = objToLoad;
@@ -689,7 +693,8 @@ WinState.prototype.Draw = function(){
 
 WinState.prototype.HandleEvent = function(event){
 	if (event.keyCode == KB_SPACE || event.keyCode == KB_ENTER) {
-		gameEngine.ChangeState("credit"); // 
+		gameEngine.ChangeState("credit"); 
+		creditState.Init();
 		game_sound.stop();
 	}
 }
@@ -712,6 +717,7 @@ IntroState.prototype.Init = function (modifier) {
 	this.timer = new Timer ();
 	this.timer.Start();
 	starwars_sound.play();
+	this.currScene = 0;
 };
 
 IntroState.prototype.Update = function (modifier) {
@@ -730,10 +736,74 @@ IntroState.prototype.Draw = function(){
 	}
 	else
 	{
-		g_Screen.drawCenterText ("Scene #" + this.currScene, GAME_WIDTH/2, GAME_HEIGHT/2, col, "26px Helvetica");
+		this.DrawStaticScene();
+		// 
 	}
 	
 	this.DrawIndications();
+}
+
+IntroState.prototype.DrawStaticScene = function(){
+	var col = "rgb(69, 69, 69)";
+	var font = "26px Helvetica";
+	
+	var text_max = "Scenefddfffldfjlfdsfsfdjhfksdhfkdshksfds"; // temp stuff, max string length during the story
+	
+	var scenar = [
+		{image: "scene_crew", text: "So, this is the story" }, 
+		{image: "scene_crew", text: "of a few people in a spacecraft." }, 
+		{image: "scene_crew", text: "One day, they had a few issues" },
+		{image: "scene_alien", text: "with a giant lizard." },
+		{image: "scene_alien", text: "Oh no, that's again not my story..." },
+		{image: "scene_spaceview", text: "In mine," },
+		{image: "scene_spaceview", text: "they were carefully flying through space." },
+		{image: "placeholder", text: "Well, carefully isn't quite the word," },
+		{image: "placeholder", text: "but hey, they are human," },
+		{image: "placeholder", text: "and everybody deserves some fun." },
+		{image: "scene_spaceview", text: "Anyway one day," },
+		{image: "scene_spaceview", text: "while they were flying through the giant universe" },
+		{image: "placeholder", text: "they hit a planet" },
+		{image: "placeholder", text: "Yeah, really." },
+		{image: "placeholder", text: "This kind of thing can happen." },
+		{image: "placeholder", text: "Especially when you don't pay attention." },
+		{image: "placeholder", text: "As you can guess, that's a bit of a problem." },
+		{image: "placeholder", text: "In the accident," },
+		{image: "placeholder", text: "the crew was spread across the land" },
+		{image: "placeholder", text: "(don't ask me how)" },
+		{image: "placeholder", text: "and the spacecraft was \"a bit\" damaged." },
+		{image: "placeholder", text: "It was damaged enough" },
+		{image: "placeholder", text: "that it could not get out of the planet" },
+		{image: "placeholder", text: "withouth being repared." },
+		{image: "placeholder", text: "One guy woke up close to the spacecraft" },
+		{image: "placeholder", text: "He had no idea about how it can be repaired" },
+		{image: "placeholder", text: "and doesn't know how to fly a spacecraft." },
+		{image: "placeholder", text: "He decided to rescue the rest of the crew" },
+		{image: "placeholder", text: "in order to get some help in return." },
+		{image: "placeholder", text: "Hopefully," },
+		{image: "placeholder", text: "in the spacecraft," },
+		{image: "placeholder", text: "he found out a working rescue compass." },
+		{image: "placeholder", text: "This tool indicates the distance and direction" },
+		{image: "placeholder", text: "of the other members of the crew." },
+		{image: "placeholder", text: "You are that guy." },
+		{image: "placeholder", text: "Rescue your friends using your compass, " },
+		{image: "placeholder", text: "stay alive," },
+		{image: "placeholder", text: "and get back to the spacecraft." },
+		{image: "placeholder", text: "Good luck." },
+	];
+	
+	if (this.currScene -1 < scenar.length){
+	/*
+		g_Screen.drawImage ("placeholder", 100, 30, 400, 360);
+		g_Screen.drawCenterText ("Scene #" + this.currScene +  " ffldfjlfdsfsfdjhfksdhfkdshksfds", GAME_WIDTH/2, GAME_HEIGHT-60, col, font);*/
+		g_Screen.drawImage (scenar[this.currScene-1].image, 100, 30, 400, 360);
+		g_Screen.drawCenterText (scenar[this.currScene-1].text, GAME_WIDTH/2, GAME_HEIGHT-60, col, font);
+	}
+	else
+	{
+		this.GotoGame();
+	}
+	
+	//g_Screen.drawCenterText ("Scene #" + this.currScene +  " ffldfjlfdsfsfdjhfksdhfkdshksfds", GAME_WIDTH/2, GAME_HEIGHT-60, col, font);
 }
 
 IntroState.prototype.DrawStarwarsScene = function(){
@@ -755,32 +825,36 @@ IntroState.prototype.DrawStarwarsScene = function(){
 }
 
 IntroState.prototype.DrawIndications  = function(){
-	var x = 2* GAME_WIDTH/3;
-	var y =  GAME_HEIGHT-30;
-	var text = "[Space] = next, [Enter] = skip";
+	var x = GAME_WIDTH/2 + 30;
+	var y =  GAME_HEIGHT-25;
+	var text = "[Right] = next, [Left] = previous, [Enter] = skip";
 	
-	g_Screen.drawText (text, x, y, "#696969", "14px Helvetica");
+	g_Screen.drawText (text, x, y, "#696969", "12px Helvetica");
+}
+
+IntroState.prototype.GotoGame = function(){
+	gameEngine.ChangeState("game");
+	starwars_sound.stop();
+	game_sound.play();
 	
-	/*
-	gameEngine.context.fillStyle = "rgb(69, 69, 69)";
-	gameEngine.context.font = "14px Helvetica";
-	gameEngine.context.textAlign = "left";
-	gameEngine.context.textBaseline = "top";
-	gameEngine.context.fillText(text, x, y);*/
+	gameEngine.effects.push ( new FadeEffect ("rgb(255, 255, 255)", 0.3, false) );
 }
 
 IntroState.prototype.HandleEvent = function(event){
-	if (event.keyCode == KB_SPACE) {
+	if (event.keyCode == KB_RIGHT) {
 		this.currScene = this.currScene + 1;
+		starwars_sound.stop();
+		// gameEngine.effects.push ( new FadeEffect ("rgb(255, 255, 255)", 0.3, false) );
+	}
+	if (event.keyCode == KB_LEFT) {
+		if (this.currScene > 1){
+			this.currScene = this.currScene - 1;
+		}
 		// gameEngine.effects.push ( new FadeEffect ("rgb(255, 255, 255)", 0.3, false) );
 	}
 
 	if (event.keyCode == KB_ENTER) {
-		gameEngine.ChangeState("game");
-		starwars_sound.stop();
-		game_sound.play();
-		
-		gameEngine.effects.push ( new FadeEffect ("rgb(255, 255, 255)", 0.3, false) );
+		this.GotoGame();
 	}
 	if (event.keyCode == KB_ESCAPE) {
 		gameEngine.ChangeState("menu");
