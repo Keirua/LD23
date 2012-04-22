@@ -20,7 +20,30 @@ var start_area = {
 
 //Create a sound 
 // /!\ Does not work in firefox
-var bullet_sound = new Audio("sound/bullet.mp3");
+/*
+var bullet_sound 	= new Audio("sound/bullet.mp3");
+var starwars_sound 	= new Audio("sound/starwars.mp3");
+var game_sound 		= new Audio("sound/soundtrack.mp3");*/
+
+var starwars_sound = new buzz.sound(["sound/starwars.mp3",  "sound/starwars.ogg"], {
+    preload: true,
+    autoload: true,
+    loop: false
+});
+
+var game_sound = new buzz.sound(["sound/soundtrack.mp3",  "sound/soundtrack.ogg"], {
+    preload: true,
+    autoload: true,
+    loop: true
+});
+game_sound.setVolume (50);
+
+var bullet_sound = new buzz.sound(["sound/bullet.mp3"], {
+    preload: true,
+    autoload: true,
+    loop: false
+});
+
 
 g_DataCache = new DataCache();
 
@@ -537,7 +560,7 @@ GameState.prototype.DrawHUD = function ()
 	this.DrawRunningInfos ();
 	var px = this.hero.x.toFixed (2);
 	var py = this.hero.y.toFixed (2);
-	// g_Screen.drawText ("Position : " + px + "x" + py, 32, 80, "rgb(0, 250, 250)", "24px Helvetica");
+
 	this.DrawCompass ();
 }
 
@@ -659,12 +682,13 @@ WinState.prototype.Draw = function(){
 	
 	g_Screen.drawCenterText ("You won", GAME_WIDTH/2, GAME_HEIGHT/2-100, col, "26px Helvetica");
 	
-	g_Screen.drawCenterText ("Press enter to start again", GAME_WIDTH/2, GAME_HEIGHT/2 + 100, col, "26px Helvetica");
+	g_Screen.drawCenterText ("Press [enter] to start again", GAME_WIDTH/2, GAME_HEIGHT/2 + 100, col, "26px Helvetica");
 }
 
 WinState.prototype.HandleEvent = function(event){
-	if (event.keyCode == KB_SPACE) {
+	if (event.keyCode == KB_SPACE || event.keyCode == KB_ENTER) {
 		gameEngine.ChangeState("menu");
+		game_sound.stop();
 	}
 }
 
@@ -674,11 +698,19 @@ WinState.prototype.HandleEvent = function(event){
 ///////////////////////////////////////////////////////////////////////////////
 IntroState = function() {
 	this.currScene = 0;
+	this.timer = new Timer();
 }
 
 IntroState.prototype = {
-	currScene : 0
+	currScene : 0,
+	pos : GAME_HEIGHT/2 - 100
 }
+
+IntroState.prototype.Init = function (modifier) {
+	this.timer = new Timer ();
+	this.timer.Start();
+	starwars_sound.play();
+};
 
 IntroState.prototype.Update = function (modifier) {
 };
@@ -691,12 +723,33 @@ IntroState.prototype.Draw = function(){
 	g_Screen.clear("rgb(0,0,0)");
 	var col = "rgb(69, 69, 69)";
 	
-	g_Screen.drawCenterText ("Intro scene", GAME_WIDTH/2, GAME_HEIGHT/2-100, col, "26px Helvetica");
-	
-	g_Screen.drawCenterText ("Scene #" + this.currScene, GAME_WIDTH/2, GAME_HEIGHT/2, col, "26px Helvetica");
-	
+	if (this.currScene == 0){
+		this.DrawStarwarsScene();
+	}
+	else
+	{
+		g_Screen.drawCenterText ("Scene #" + this.currScene, GAME_WIDTH/2, GAME_HEIGHT/2, col, "26px Helvetica");
+	}
 	
 	this.DrawIndications();
+}
+
+IntroState.prototype.DrawStarwarsScene = function(){
+	var yoffset = this.pos - this.timer.Elapsed()*0.001*30;
+	var col = "rgb(69, 69, 69)";
+	var font = "26px Helvetica";
+
+	g_Screen.drawCenterText ("A long time ago", GAME_WIDTH/2, yoffset, col, font);
+	g_Screen.drawCenterText ("in a galaxy far far away", GAME_WIDTH/2, yoffset + 100, col, font);
+	g_Screen.drawCenterText ("there was a terrible war", GAME_WIDTH/2, yoffset + 200, col, font);
+	g_Screen.drawCenterText ("Well, actually, forget about that.", GAME_WIDTH/2, yoffset + 400, col, font);
+	g_Screen.drawCenterText ("That's another story.", GAME_WIDTH/2, yoffset + 500, col, font);
+	
+	// if (yoffset < -400)
+	if (this.timer.Elapsed () > 9000)
+	{
+		g_Screen.drawCenterText ("Hit [space] to continue", GAME_WIDTH/2, 400, col, font);
+	}
 }
 
 IntroState.prototype.DrawIndications  = function(){
@@ -722,6 +775,9 @@ IntroState.prototype.HandleEvent = function(event){
 
 	if (event.keyCode == KB_ENTER) {
 		gameEngine.ChangeState("game");
+		starwars_sound.stop();
+		game_sound.play();
+		
 		gameEngine.effects.push ( new FadeEffect ("rgb(255, 255, 255)", 0.3, false) );
 	}
 	if (event.keyCode == KB_ESCAPE) {
@@ -737,10 +793,12 @@ IntroState.prototype.HandleEvent = function(event){
 ///////////////////////////////////////////////////////////////////////////////
 CutsceneState = function() {
 	this.nbFound = 0;
+	this.timer = new Timer();
 }
 
 CutsceneState.prototype = {
-	
+	pos : GAME_HEIGHT - 100,
+	active:false,
 }
 
 CutsceneState.prototype.Reset = function () {
@@ -764,9 +822,11 @@ CutsceneState.prototype.Draw = function(){
 		g_Screen.drawCenterText ("You found " + this.nbFound + "/" + NB_TARGETS + " persons", GAME_WIDTH/2, GAME_HEIGHT/2, col, "26px Helvetica");
 	}
 	else
-		g_Screen.drawCenterText ("You found everybody ! Now go back to the spacecraft !", GAME_WIDTH/2, GAME_HEIGHT/2, col, "26px Helvetica");
-	
-	g_Screen.drawCenterText ("Press space to get back to the game", GAME_WIDTH/2, GAME_HEIGHT/2 + 100, col, "26px Helvetica");
+	{
+		g_Screen.drawCenterText ("You found everybody !", GAME_WIDTH/2, GAME_HEIGHT/2, col, "26px Helvetica");
+		g_Screen.drawCenterText (" Now go back to the spacecraft !", GAME_WIDTH/2, GAME_HEIGHT/2 + 100, col, "26px Helvetica");
+	}
+	g_Screen.drawCenterText ("Press space to get back to the game", GAME_WIDTH/2, GAME_HEIGHT/2 + 200, col, "26px Helvetica");
 	
 }
 
@@ -802,12 +862,13 @@ DeathState.prototype.Draw = function(){
 	
 	g_Screen.drawCenterText ("It was very painful and you suffered a lot", GAME_WIDTH/2, GAME_HEIGHT/2, col, "26px Helvetica");
 	
-	g_Screen.drawCenterText ("Now press enter to do something better", GAME_WIDTH/2, GAME_HEIGHT/2 + 100, col, "26px Helvetica");
+	g_Screen.drawCenterText ("Now press [enter] to do something better", GAME_WIDTH/2, GAME_HEIGHT/2 + 100, col, "26px Helvetica");
 }
 
 DeathState.prototype.HandleEvent = function(event){
 	if (event.keyCode == KB_SPACE || event.keyCode == KB_ENTER) {
 		gameEngine.ChangeState("menu");
+		game_sound.stop();
 	}
 }
 
@@ -869,7 +930,7 @@ MenuState.prototype.HandleEvent = function(event){
 		if (this.activeItem == 0){
 			
 			gameEngine.ChangeState("intro");
-			introState.currScene = 0;	// restart the scene position
+			introState.Init();	// restart the scene position
 			gameState.Init();
 			// currState = 1;
 			gameEngine.effects.push ( new FadeEffect ("rgb(255, 255, 255)", 0.3, false) );
