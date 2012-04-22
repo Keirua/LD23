@@ -43,8 +43,14 @@ Screen.prototype.drawLine = function (px, py, px2, py2, col){
 	this.context.beginPath();
     this.context.moveTo(px, py);
     this.context.lineTo(px2, py2);
+	
+	this.context.lineWidth = 3;
+
+	// set line color
+	this.context.strokeStyle = "#ff0000";
+	this.context.stroke();
+	
     this.context.closePath();
-    this.context.stroke();
 }
 
 Screen.prototype.drawText = function (text, x, y, color, font){

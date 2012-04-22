@@ -52,7 +52,9 @@ var objToLoad = [
 	"hero",
 	"crew",
 	// "background",
+	"compass",
 	"tree",
+	// "needle",
 	"floor_tileset",
 	"spacecraft",
 	// "enter_key",
@@ -60,8 +62,14 @@ var objToLoad = [
 	"arrow_keys",
 	"placeholder",
 	"scene_crew",
+	"scene_hit_planet",
+	"scene_damaged_spacecraft",
 	"scene_alien",
 	"scene_spaceview",
+	"scene_close_spacecraft",
+	"scene_spread",
+	"scene_compass",
+	"scene_you",
 ];
 
 g_DataCache.queue = objToLoad;
@@ -572,12 +580,12 @@ GameState.prototype.DrawHUD = function ()
 
 GameState.prototype.DrawRunningInfos = function (){
 	if (this.hero.isRunning){
-		g_Screen.drawText ("Timer : " + this.runTimer.Elapsed().toFixed(2), 32, 50, "rgb(0, 250, 250)", "24px Helvetica");
+		// g_Screen.drawText ("Timer : " + this.runTimer.Elapsed().toFixed(2), 32, 50, "rgb(0, 250, 250)", "24px Helvetica");
 		var ratio = this.runTimer.Elapsed () / this.runDuration;
 		var MAX_WIDTH = 200;
 		g_Screen.drawRect (10 + MAX_WIDTH, 10, -ratio * MAX_WIDTH, 20, "rgb (128, 128, 128)");
 	}else if (this.hero.canRun == false){
-		g_Screen.drawText ("Timer : " + this.waitTimer.Elapsed().toFixed(2), 32, 50, "rgb(0, 250, 250)", "24px Helvetica");
+		// g_Screen.drawText ("Timer : " + this.waitTimer.Elapsed().toFixed(2), 32, 50, "rgb(0, 250, 250)", "24px Helvetica");
 		var ratio = this.waitTimer.Elapsed () / this.runDuration;
 		var MAX_WIDTH = 200;
 		g_Screen.drawRect (10 + MAX_WIDTH, 10, ratio * MAX_WIDTH, 20, "rgb (128, 128, 128)");
@@ -617,9 +625,24 @@ GameState.prototype.DrawCompass = function () {
 	px = (0.4 * s) * (px / len);
 	py = (0.4 * s) *(py / len);
 	
-	g_Screen.drawRect(x0, y0, s, s, "rgb(0, 250, 250)");
+	// g_Screen.drawRect(x0, y0, s, s, "rgb(0, 250, 250)");
+	g_Screen.drawImage("compass", x0, y0, s, s);
 	// g_Screen.drawText ("Distance : " + (len*0.1).toFixed (2), 32, 32, "rgb(0, 250, 250)", "24px Helvetica");
 	g_Screen.drawLine (x0 + s/2, y0 + s/2, px + x0 + s/2, py + y0 + s/2, "rgb(255, 0, 0)");
+	
+	// Finally not done : using an image for the needle really does not gives a good result.
+	// The red line is much better
+	
+	// var needle = g_DataCache.getImage ("needle");
+	/*var ctx = g_Screen.context;
+	ctx.save ();
+	var angle = Math.atan2(py, px);
+	
+	ctx.translate(x0 + s/2 + 3, y0 + s/2);
+	// ctx.rotate(45 * Math.PI / 180);
+	ctx.rotate(angle);
+	ctx.drawImage(needle, 0,0, 6, 32);
+	ctx.restore();*/
 	g_Screen.drawCenterText ((len*0.1).toFixed (2), x0 + s/2, y0 + s + 10, "rgb(0, 250, 250)", "24px Helvetica");
 };
 
@@ -756,40 +779,40 @@ IntroState.prototype.DrawStaticScene = function(){
 		{image: "scene_crew", text: "One day, they had a few issues" },
 		{image: "scene_alien", text: "with a giant lizard." },
 		{image: "scene_alien", text: "Oh no, that's again not my story..." },
-		{image: "scene_spaceview", text: "In mine," },
+		{image: "scene_spaceview", text: "In this one," },
 		{image: "scene_spaceview", text: "they were carefully flying through space." },
 		{image: "placeholder", text: "Well, carefully isn't quite the word," },
 		{image: "placeholder", text: "but hey, they are human," },
 		{image: "placeholder", text: "and everybody deserves some fun." },
 		{image: "scene_spaceview", text: "Anyway one day," },
 		{image: "scene_spaceview", text: "while they were flying through the giant universe" },
-		{image: "placeholder", text: "they hit a planet" },
-		{image: "placeholder", text: "Yeah, really." },
-		{image: "placeholder", text: "This kind of thing can happen." },
-		{image: "placeholder", text: "Especially when you don't pay attention." },
-		{image: "placeholder", text: "As you can guess, that's a bit of a problem." },
-		{image: "placeholder", text: "In the accident," },
-		{image: "placeholder", text: "the crew was spread across the land" },
-		{image: "placeholder", text: "(don't ask me how)" },
-		{image: "placeholder", text: "and the spacecraft was \"a bit\" damaged." },
-		{image: "placeholder", text: "It was damaged enough" },
-		{image: "placeholder", text: "that it could not get out of the planet" },
-		{image: "placeholder", text: "withouth being repared." },
-		{image: "placeholder", text: "One guy woke up close to the spacecraft" },
-		{image: "placeholder", text: "He had no idea about how it can be repaired" },
-		{image: "placeholder", text: "and doesn't know how to fly a spacecraft." },
-		{image: "placeholder", text: "He decided to rescue the rest of the crew" },
-		{image: "placeholder", text: "in order to get some help in return." },
-		{image: "placeholder", text: "Hopefully," },
-		{image: "placeholder", text: "in the spacecraft," },
-		{image: "placeholder", text: "he found out a working rescue compass." },
-		{image: "placeholder", text: "This tool indicates the distance and direction" },
-		{image: "placeholder", text: "of the other members of the crew." },
-		{image: "placeholder", text: "You are that guy." },
-		{image: "placeholder", text: "Rescue your friends using your compass, " },
-		{image: "placeholder", text: "stay alive," },
-		{image: "placeholder", text: "and get back to the spacecraft." },
-		{image: "placeholder", text: "Good luck." },
+		{image: "scene_hit_planet", text: "they hit a planet" },
+		{image: "scene_hit_planet", text: "Yeah, really." },
+		{image: "scene_hit_planet", text: "This kind of thing can happen." },
+		{image: "scene_hit_planet", text: "Especially when you don't pay attention." },
+		{image: "scene_hit_planet", text: "As you can guess, that's a bit of a problem." },
+		{image: "scene_hit_planet", text: "In the accident," },
+		{image: "scene_spread", text: "the crew was spread across the land" },
+		{image: "scene_spread", text: "(don't ask me how)" },
+		{image: "scene_damaged_spacecraft", text: "and the spacecraft was \"a bit\" damaged." },
+		{image: "scene_damaged_spacecraft", text: "In such a state," },
+		{image: "scene_damaged_spacecraft", text: "he wouldn't get out of the planet" },
+		{image: "scene_damaged_spacecraft", text: "withouth being repared." },
+		{image: "scene_close_spacecraft", text: "One guy woke up close to the spacecraft" },
+		{image: "scene_close_spacecraft", text: "He had no idea about how it can be repaired" },
+		{image: "scene_close_spacecraft", text: "and doesn't know how to fly a spacecraft." },
+		{image: "scene_close_spacecraft", text: "He decided to rescue the rest of the crew" },
+		{image: "scene_close_spacecraft", text: "in order to get some help in return." },
+		{image: "scene_compass", text: "Hopefully," },
+		{image: "scene_compass", text: "in the spacecraft," },
+		{image: "scene_compass", text: "he found out a working rescue compass." },
+		{image: "scene_compass", text: "This tool indicates the distance and direction" },
+		{image: "scene_compass", text: "of the other members of the crew." },
+		{image: "scene_you", text: "You are that guy." },
+		{image: "scene_you", text: "Rescue your friends using your compass, " },
+		{image: "scene_you", text: "stay alive," },
+		{image: "scene_you", text: "and get back to the spacecraft." },
+		{image: "scene_you", text: "Good luck." },
 	];
 	
 	if (this.currScene -1 < scenar.length){
@@ -976,7 +999,8 @@ MenuState.prototype.Draw = function(){
 	g_Screen.drawRect (0,0, GAME_WIDTH, GAME_HEIGHT, "#d0e7f9");
 	
 	// Display the Title
-	g_Screen.drawText ("LD23 - Don't forget to find a title", 32,32, "rgb(0, 250, 250)", "26px Helvetica");
+	g_Screen.drawCenterText ("Lost in space", GAME_WIDTH/2,32, "rgb(0, 0, 0)", "64px Helvetica");
+	g_Screen.drawCenterText ("(it happens)", 3*GAME_WIDTH/4,32+64, "#696969", "32px Helvetica");
 	// g_Screen.drawText ("Cache : " + g_DataCache.queue.length, 32,64, "rgb(0, 250, 250)", "26px Helvetica");
 	
 	// Display the menu
