@@ -292,6 +292,8 @@ GameState.prototype.UpdatePlayer = function (modifier){
 	
 	if (KB_ESCAPE in gameEngine.keysDown) {
 		gameEngine.ChangeState("menu");
+		game_sound.stop();
+		starwars_sound.stop();
 	}
 	
 	// check if the player didn't collide with an ennmy
@@ -682,12 +684,12 @@ WinState.prototype.Draw = function(){
 	
 	g_Screen.drawCenterText ("You won", GAME_WIDTH/2, GAME_HEIGHT/2-100, col, "26px Helvetica");
 	
-	g_Screen.drawCenterText ("Press [enter] to start again", GAME_WIDTH/2, GAME_HEIGHT/2 + 100, col, "26px Helvetica");
+	g_Screen.drawCenterText ("Press [enter] to reach the credit", GAME_WIDTH/2, GAME_HEIGHT/2 + 100, col, "26px Helvetica");
 }
 
 WinState.prototype.HandleEvent = function(event){
 	if (event.keyCode == KB_SPACE || event.keyCode == KB_ENTER) {
-		gameEngine.ChangeState("menu");
+		gameEngine.ChangeState("credit"); // 
 		game_sound.stop();
 	}
 }
@@ -783,6 +785,8 @@ IntroState.prototype.HandleEvent = function(event){
 	if (event.keyCode == KB_ESCAPE) {
 		gameEngine.ChangeState("menu");
 		gameEngine.effects.push ( new FadeEffect ("rgb(255, 255, 255)", 0.3, false) );
+		game_sound.stop();
+		starwars_sound.stop();
 	}
 	
 }
@@ -943,13 +947,13 @@ MenuState.prototype.HandleEvent = function(event){
 		}
 	}
 	if (event.keyCode == KB_UP) { // Player holding up
-		target_found.play();
+		// target_found.play();
 		this.activeItem = (this.activeItem-1);
 		if (this.activeItem < 0)
 			this.activeItem = this.menuItems.length-1;
 	}
 	if (event.keyCode == KB_DOWN) { // Player holding down
-		target_found.play();
+		// target_found.play();
 		this.activeItem = (this.activeItem + 1) % (this.menuItems.length);
 	}
 }
@@ -973,15 +977,49 @@ CreditState.prototype.Init = function (){
 }
 
 CreditState.prototype.Update = function (dt) {
-	if (KB_ESCAPE in gameEngine.keysDown) {
-		gameEngine.ChangeState("menu");
+}
+
+CreditState.prototype.HandleEvent = function(event){
+	if (event.keyCode == KB_SPACE || event.keyCode == KB_ENTER || event.keyCode == KB_ESCAPE) {
+		gameEngine.ChangeState ("menu");
 		this.active = false;
 	}
 }
 
 CreditState.prototype.Draw = function () {
-	g_Screen.drawCenterText ("Yay !", GAME_WIDTH/2, this.pos - this.timer.Elapsed()*0.001*20, "rgb(0, 250, 250)", "24px Helvetica");
-	g_Screen.drawText ("" + this.timer.ChronoString(), 100, 100, "rgb(0, 250, 250)", "24px Helvetica");
+	var dx = GAME_WIDTH/2;
+	var dy = this.pos - this.timer.Elapsed()*0.001*30;
+	var col = "#696969";
+	var text = [
+	
+		"Thanks for playing !",
+		"",
+		"Game realized by Keirua",
+		"for Ludum Dare #23",
+		"",
+		"keirua@gmail.com / @clemkeirua on Twitter",
+		"",
+		"Tools :",
+		"Code : HTML5/Javascript",
+		"Images : Inkscape, Paint.Net",
+		"Mental : Pizza, noodles, junk food",
+		"Music : Audacity, Circuli",
+		"",
+		"Press [enter] to go back to the menu"
+	];
+	g_Screen.clear ("black");
+	for (var id in text){
+		var font = (id == 0 ? "64" : "24") + "px Helvetica";
+		g_Screen.drawCenterText (text[id], dx, dy + id * 50, col, font);
+	}
+	if (this.timer.Elapsed() > 30000){
+		g_Screen.drawCenterText ("Come one, it's over now,", dx, GAME_HEIGHT/2+100, col, "24px Helvetica");
+		g_Screen.drawCenterText ("There's nothing to do here", dx, GAME_HEIGHT/2 + 150, col, "24px Helvetica");
+	}
+	
+	// g_Screen.drawCenterText ("Yay !", GAME_WIDTH/2, this.pos - this.timer.Elapsed()*0.001*20, "rgb(0, 250, 250)", "24px Helvetica");
+	
+	// g_Screen.drawText ("" + this.timer.ChronoString(), 100, 100, "rgb(0, 250, 250)", "24px Helvetica");
 }
 
 ///////////////////////////////////////////////////////////////////////////////
