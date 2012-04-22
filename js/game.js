@@ -38,12 +38,17 @@ var game_sound = new buzz.sound(["sound/soundtrack.mp3",  "sound/soundtrack.ogg"
 });
 game_sound.setVolume (50);
 
-var target_found = new buzz.sound(["sound/target_found.mp3"], {
+var target_found = new buzz.sound(["sound/target_found.mp3", "sound/target_found.ogg"], {
     preload: true,
     autoload: true,
     loop: false
 });
 
+var breathing_sound = new buzz.sound(["sound/breathing.mp3", "sound/breathing.ogg"], {
+    preload: true,
+    autoload: true,
+    loop: false
+});
 
 g_DataCache = new DataCache();
 
@@ -210,7 +215,7 @@ GameState.prototype = {
 	floor_tiles : {},
 	
 	runDuration: 2000, // How long one can run
-	runWaitingTime: 2000, // when you are done running, how long you have to wait before being able to run again
+	runWaitingTime: 2500, // when you are done running, how long you have to wait before being able to run again
 	viewport:{},
 	obstacles:{}, // stuff blocking the payer
 	nbObstacles:10,
@@ -243,6 +248,7 @@ GameState.prototype.UpdatePlayer = function (modifier){
 		if (this.runTimer.Elapsed () > this.runDuration){
 			this.hero.isRunning = false;
 			this.waitTimer.Start();
+			breathing_sound.play();
 		}
 	}
 	else{
@@ -579,7 +585,7 @@ GameState.prototype.DrawHUD = function ()
 }
 
 GameState.prototype.DrawRunningInfos = function (){
-	if (this.hero.isRunning){
+	/*if (this.hero.isRunning){
 		// g_Screen.drawText ("Timer : " + this.runTimer.Elapsed().toFixed(2), 32, 50, "rgb(0, 250, 250)", "24px Helvetica");
 		var ratio = this.runTimer.Elapsed () / this.runDuration;
 		var MAX_WIDTH = 200;
@@ -589,7 +595,7 @@ GameState.prototype.DrawRunningInfos = function (){
 		var ratio = this.waitTimer.Elapsed () / this.runDuration;
 		var MAX_WIDTH = 200;
 		g_Screen.drawRect (10 + MAX_WIDTH, 10, ratio * MAX_WIDTH, 20, "rgb (128, 128, 128)");
-	}
+	}*/
 }
 
 GameState.prototype.DrawCompass = function () {
