@@ -694,8 +694,24 @@ IntroState.prototype.Draw = function(){
 	g_Screen.drawCenterText ("Intro scene", GAME_WIDTH/2, GAME_HEIGHT/2-100, col, "26px Helvetica");
 	
 	g_Screen.drawCenterText ("Scene #" + this.currScene, GAME_WIDTH/2, GAME_HEIGHT/2, col, "26px Helvetica");
+	
+	
+	this.DrawIndications();
+}
 
-	g_Screen.drawCenterText ("Now press space to play", GAME_WIDTH/2, GAME_HEIGHT/2 + 100, col, "26px Helvetica");
+IntroState.prototype.DrawIndications  = function(){
+	var x = 2* GAME_WIDTH/3;
+	var y =  GAME_HEIGHT-30;
+	var text = "[Space] = next, [Enter] = skip";
+	
+	g_Screen.drawText (text, x, y, "#696969", "14px Helvetica");
+	
+	/*
+	gameEngine.context.fillStyle = "rgb(69, 69, 69)";
+	gameEngine.context.font = "14px Helvetica";
+	gameEngine.context.textAlign = "left";
+	gameEngine.context.textBaseline = "top";
+	gameEngine.context.fillText(text, x, y);*/
 }
 
 IntroState.prototype.HandleEvent = function(event){
@@ -708,6 +724,11 @@ IntroState.prototype.HandleEvent = function(event){
 		gameEngine.ChangeState("game");
 		gameEngine.effects.push ( new FadeEffect ("rgb(255, 255, 255)", 0.3, false) );
 	}
+	if (event.keyCode == KB_ESCAPE) {
+		gameEngine.ChangeState("menu");
+		gameEngine.effects.push ( new FadeEffect ("rgb(255, 255, 255)", 0.3, false) );
+	}
+	
 }
 
 

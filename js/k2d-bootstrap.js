@@ -73,6 +73,14 @@ Screen.prototype.drawCenterText = function (text, x, y, color, font){
 	this.context.fillText(text, x, y);
 }
 
+Screen.prototype.drawRightAlignedText = function (text, x, y, color, font){
+	this.context.fillStyle = color;
+	this.context.font = font;
+	this.context.textAlign = "center";
+	this.context.textBaseline = "right";
+	this.context.fillText(text, x, y);
+}
+
 Screen.prototype.clear = function(color){
 	this.drawRect(0,0, GAME_WIDTH, GAME_HEIGHT, color);
 }
