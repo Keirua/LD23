@@ -358,8 +358,10 @@ GameState.prototype.CheckTargetsLogic = function(){
 				
 				target_found.play();
 				gameEngine.effects.push ( new FadeEffect ("rgb(255, 255, 255)", 0.3, false) );
+				
+				cutsceneState.NextScene();
+				
 				gameEngine.ChangeState("cutscene");
-				cutsceneState.nbFound = cutsceneState.nbFound + 1;
 			}
 		}
 	}
@@ -776,7 +778,7 @@ IntroState.prototype.Draw = function(){
 		// 
 	}
 	
-	this.DrawIndications();
+	DrawIndications();
 }
 
 IntroState.prototype.DrawStaticScene = function(){
@@ -863,12 +865,13 @@ IntroState.prototype.DrawStarwarsScene = function(){
 	}
 }
 
-IntroState.prototype.DrawIndications  = function(){
+var DrawIndications  = function(){
 	var x = GAME_WIDTH/2 + 30;
 	var y =  GAME_HEIGHT-25;
 	var text = "[Right] = next, [Left] = previous, [Enter] = skip";
 	
-	g_Screen.drawText (text, x, y, "#696969", "12px Helvetica");
+	// g_Screen.drawText (text, x, y, "#696969", "12px Helvetica");
+	g_Screen.drawCenterText (text, GAME_WIDTH/2, y, "#696969", "12px Helvetica");
 }
 
 IntroState.prototype.GotoGame = function(){
@@ -904,6 +907,82 @@ IntroState.prototype.HandleEvent = function(event){
 	
 }
 
+// Discovery of the cook
+var scenar_scene1 = [
+		{image: "placeholder", talker: "hero", text: "Hi !" }, 
+		{image: "placeholder", talker: "hero", text: "Are you OK ?" }, 
+		{image: "placeholder", talker: "cook", text: "Oh ! I've seen better days," },
+		{image: "placeholder", talker: "cook", text: "but I can walk, thanks." },
+		{image: "placeholder", talker: "cook", text: "How did you find me ?" }, 
+		{image: "placeholder", talker: "hero", text: "I used the rescue compass." },
+		{image: "placeholder", talker: "cook", text: "Can you get back to spacecraft ?" },
+		{image: "placeholder", talker: "hero", text: "Yeah, but it's useless." },
+		{image: "placeholder", talker: "hero", text: "It's totally broke." },
+		{image: "placeholder", talker: "cook", text: "Really ?" },
+		{image: "placeholder", talker: "hero", text: "Yeah..." },
+		{image: "placeholder", talker: "hero", text: "Maybe you did not notice," },
+		{image: "placeholder", talker: "hero", text: "but that was quite an accident." },
+		{image: "placeholder", talker: "cook", text: "Can't we repair it ?" },
+		{image: "placeholder", talker: "hero", text: "We need to find a mechanics." },
+		{image: "placeholder", talker: "cook", text: "OK, let's go." },
+	];
+
+// Then the captain
+var scenar_scene2 = [
+		{image: "placeholder", talker: "hero", text: "Hi captain !" }, 
+		{image: "placeholder", talker: "captain", text: "Hi soldiers." }, 
+		{image: "placeholder", talker: "captain", text: "Thanks for rescuing me." },
+		{image: "placeholder", talker: "captain", text: "Are there other survivors ?" },
+		{image: "placeholder", talker: "hero", text: "It seems so." },
+		{image: "placeholder", talker: "cook", text: "The rescue compass says that " },
+		{image: "placeholder", talker: "cook", text: "2 other members from the crew" },
+		{image: "placeholder", talker: "cook", text: "are alive on this planet." },
+		{image: "placeholder", talker: "hero", text: "We are looking for a mechanic." },
+		{image: "placeholder", talker: "hero", text: "The spacecraft is in a bad shape." },
+		{image: "placeholder", talker: "captain", text: "OK" },
+		{image: "placeholder", talker: "captain", text: "Do you think it can fly again ?" },
+		{image: "placeholder", talker: "hero", text: "It seems pretty bad..." },
+		{image: "placeholder", talker: "captain", text: "We'll look for the others," },
+		{image: "placeholder", talker: "captain", text: "maybe a mechanics can help us." },
+		{image: "placeholder", talker: "captain", text: "otherwise, we'll find out." },
+		{image: "placeholder", talker: "captain", text: "Then, I'll fly the spacecraft." }
+	];
+	
+// The gungirl
+var scenar_scene3 = [
+		{image: "placeholder", talker: "hero", text: "You are bleeding a lot" }, 
+		{image: "placeholder", talker: "gun", text: "That's nothing." }, 
+		{image: "placeholder", talker: "gun", text: "Have you really been in the army ?" }, 
+	];
+	
+// And the mechanics
+var scenar_scene4 = [
+		{image: "placeholder", talker: "hero", text: "Hi" }, 
+		{image: "placeholder", talker: "mecha", text: "Ha, finally," }, 
+		{image: "placeholder", talker: "mecha", text: "I was waiting for you" }, 
+		{image: "placeholder", talker: "hero", text: "?" },
+		{image: "placeholder", talker: "mecha", text: "Those rescue compasses"},
+		{image: "placeholder", talker: "mecha", text: "they are pretty solid"},
+		{image: "placeholder", talker: "mecha", text: "Can you get back to spacecraft ?" },
+		{image: "placeholder", talker: "mecha", text: "Yeah, but it's useless." },
+	];
+
+// Then back at the plane
+var scenar_scene4 = [
+		{image: "placeholder", talker: "hero", text: "back at the place" }, 
+		{image: "placeholder", talker: "gun", text: "Oh ! How did you find me ?" }, 
+		{image: "placeholder", talker: "hero", text: "I used the rescue compass." },
+		{image: "placeholder", talker: "hero", text: "Are you OK ?" },
+		{image: "placeholder", talker: "mecha", text: "Can you get back to spacecraft ?" },
+		{image: "placeholder", talker: "mecha", text: "Yeah, but it's useless." },
+	];
+	
+var scenarii  =  [
+	scenar_scene1,
+	scenar_scene2,
+	scenar_scene3,
+	scenar_scene4,
+];
 
 ///////////////////////////////////////////////////////////////////////////////
 // Cutscene state
@@ -916,37 +995,64 @@ CutsceneState = function() {
 CutsceneState.prototype = {
 	pos : GAME_HEIGHT - 100,
 	active:false,
+	nbFound : 0,
+	currScreen : 0,
+	that : {}
 }
 
 CutsceneState.prototype.Reset = function () {
 	this.nbFound = 0;
+	this.currScreen = 0;
+	this.nbFound = 0;
+	this.that = this;
 };
 
 CutsceneState.prototype.Update = function (modifier) {
 };
 
-CutsceneState.prototype.DrawScene1 = function(){
-var col = "rgb(69, 69, 69)";
-	g_Screen.drawCenterText ("You found " + this.nbFound + "/" + NB_TARGETS + " persons", GAME_WIDTH/2, GAME_HEIGHT/2, col, "26px Helvetica");
-} 
+CutsceneState.prototype.NextScene = function () {
+	this.nbFound = this.nbFound + 1;
+	this.currScreen = 0;
+};
 
-CutsceneState.prototype.DrawScene2 = function(){
-var col = "rgb(69, 69, 69)";
-	g_Screen.drawCenterText ("You found " + this.nbFound + "/" + NB_TARGETS + " persons", GAME_WIDTH/2, GAME_HEIGHT/2, col, "26px Helvetica");
-} 
-
-CutsceneState.prototype.DrawScene3 = function(){
-var col = "rgb(69, 69, 69)";
-	g_Screen.drawCenterText ("You found " + this.nbFound + "/" + NB_TARGETS + " persons", GAME_WIDTH/2, GAME_HEIGHT/2, col, "26px Helvetica");
-} 
-
-CutsceneState.prototype.DrawScene4 = function(){
+CutsceneState.prototype.DrawScene = function(){
 	var col = "rgb(69, 69, 69)";
-	g_Screen.drawCenterText ("You found " + this.nbFound + "/" + NB_TARGETS + " persons", GAME_WIDTH/2, GAME_HEIGHT/2, col, "26px Helvetica");
-}
+	var font = "26px Helvetica";
+	
+	var scenar = scenarii [this.nbFound - 1];
+	var currScene = scenar[this.currScreen];
+
+	// g_Screen.drawText ("" + this.nbFound + " " + this.currScreen, 10, 10, col, font);
+	
+	if (this.currScreen < scenar.length){
+		g_Screen.drawImage (currScene.image, 100, 30, 400, 360);
+		g_Screen.drawCenterText (currScene.text, GAME_WIDTH/2, GAME_HEIGHT-60, col, font);
+		
+		var dx = 10;
+		if (currScene.talker != "hero")
+		{
+			dx = GAME_WIDTH - 64 - dx;
+		}
+		g_Screen.drawImage ("icon_" + currScene.talker, dx, GAME_HEIGHT - 74, 64, 64);
+	}
+	else
+	{
+		gameEngine.effects.push ( new FadeEffect ("rgb(255, 255, 255)", 0.3, false) );
+		if (this.nbFound != NB_TARGETS){
+			gameEngine.ChangeState("game");
+		}
+		else
+		{
+			gameEngine.ChangeState("win");
+		}
+	}
+	DrawIndications();
+	
+	// g_Screen.drawCenterText ("You found " + this.nbFound + "/" + NB_TARGETS + " persons", GAME_WIDTH/2, GAME_HEIGHT/2, col, "26px Helvetica");
+} 
 
 // Final cutscene, where the player is told to go to the spacecraft
-CutsceneState.prototype.DrawScene5 = function(){
+CutsceneState.prototype.DrawSceneFinal = function(){
 	g_Screen.drawCenterText ("You found everybody !", GAME_WIDTH/2, GAME_HEIGHT/2, col, "26px Helvetica");
 	g_Screen.drawCenterText (" Now go back to the spacecraft !", GAME_WIDTH/2, GAME_HEIGHT/2 + 100, col, "26px Helvetica");
 	g_Screen.drawCenterText ("You found " + this.nbFound + "/" + NB_TARGETS + " persons", GAME_WIDTH/2, GAME_HEIGHT/2, col, "26px Helvetica");
@@ -960,36 +1066,28 @@ CutsceneState.prototype.Draw = function(){
 	g_Screen.clear("rgb(0,0,0)");
 	var col = "rgb(69, 69, 69)";
 	
-	g_Screen.drawCenterText ("Cutscene 1", GAME_WIDTH/2, GAME_HEIGHT/2-100, col, "26px Helvetica");
+	// g_Screen.drawCenterText ("Cutscene 1", GAME_WIDTH/2, GAME_HEIGHT/2-100, col, "26px Helvetica");
 	
-	if (this.nbFound == 1){
-		CutsceneState.prototype.DrawScene1();
+	if (this.nbFound <= NB_TARGETS){
+		this.DrawScene();
 	}
-	else if(this.nbFound == 2){
-		CutsceneState.prototype.DrawScene1();
-	}
-	else if(this.nbFound == 3){
-		CutsceneState.prototype.DrawScene1();
-	}
-	else if(this.nbFound == 4){
-		CutsceneState.prototype.DrawScene1();
-	}
-	else if (this.nbFound != NB_TARGETS)
-	{
-		CutsceneState.prototype.DrawScene1();
-	}
-	g_Screen.drawCenterText ("Press space to get back to the game", GAME_WIDTH/2, GAME_HEIGHT/2 + 200, col, "26px Helvetica");
+	// g_Screen.drawCenterText ("Press space to get back to the game", GAME_WIDTH/2, GAME_HEIGHT/2 + 200, col, "26px Helvetica");
 	
-}
-
+}	
+		
 CutsceneState.prototype.HandleEvent = function(event){
-	if (event.keyCode == KB_SPACE) {
-		gameEngine.ChangeState("game");
-		gameEngine.effects.push ( new FadeEffect ("rgb(255, 255, 255)", 0.3, false) );
+	if (event.keyCode == KB_RIGHT) {
+		this.currScreen = this.currScreen + 1;
+	}else if (event.keyCode == KB_LEFT && this.currScreen > 0){
+		this.currScreen = this.currScreen - 1;
+	}
+	else if (event.keyCode == KB_ENTER)
+	{
+		var scenar = scenarii [this.nbFound - 1];
+		var currScene = scenar[this.currScreen];
+		this.currScreen = currScene.length;
 	}
 }
-
-
 
 ///////////////////////////////////////////////////////////////////////////////
 // Death state
