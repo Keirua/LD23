@@ -76,6 +76,11 @@ var objToLoad = [
 	"scene_spread",
 	"scene_compass",
 	"scene_you",
+	"icon_hero",
+	"icon_captain",
+	"icon_cook",
+	"icon_gun",
+	"icon_mecha",
 ];
 
 g_DataCache.queue = objToLoad;
