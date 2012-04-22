@@ -357,6 +357,7 @@ GameState.prototype.CheckTargetsLogic = function(){
 				this.targets_found[t] = true;
 				
 				target_found.play();
+				
 				gameEngine.effects.push ( new FadeEffect ("rgb(255, 255, 255)", 0.3, false) );
 				
 				cutsceneState.NextScene();
@@ -705,37 +706,6 @@ GameState.prototype.Init = function () {
 	this.InitFloor ();
 };
 
-///////////////////////////////////////////////////////////////////////////////
-// Win state
-///////////////////////////////////////////////////////////////////////////////
-WinState = function() {}
-
-WinState.prototype = {
-}
-
-WinState.prototype.Update = function (modifier) {
-};
-	
-WinState.prototype.Draw = function(){
-	// Background
-	g_Screen.drawRect (0,0, GAME_WIDTH, GAME_HEIGHT, "#d0e7f9");
-	
-	// Display the Title
-	g_Screen.clear("rgb(0,0,0)");
-	var col = "rgb(69, 69, 69)";
-	
-	g_Screen.drawCenterText ("You won", GAME_WIDTH/2, GAME_HEIGHT/2-100, col, "26px Helvetica");
-	
-	g_Screen.drawCenterText ("Press [enter] to reach the credit", GAME_WIDTH/2, GAME_HEIGHT/2 + 100, col, "26px Helvetica");
-}
-
-WinState.prototype.HandleEvent = function(event){
-	if (event.keyCode == KB_SPACE || event.keyCode == KB_ENTER) {
-		gameEngine.ChangeState("credit"); 
-		creditState.Init();
-		game_sound.stop();
-	}
-}
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -775,7 +745,6 @@ IntroState.prototype.Draw = function(){
 	else
 	{
 		this.DrawStaticScene();
-		// 
 	}
 	
 	DrawIndications();
@@ -907,6 +876,87 @@ IntroState.prototype.HandleEvent = function(event){
 	
 }
 
+
+
+// Then back at the plane
+var scenar_scene_final = [
+		{image: "placeholder", talker: "hero", text: "Back at the spacecraft" }, 
+		{image: "placeholder", talker: "mecha", text: "What ? Are you kidding ?" }, 
+		{image: "placeholder", talker: "mecha", text: "So this is your big accident ?" }, 
+		{image: "placeholder", talker: "mecha", text: "Of course i can make it fly." },
+		{image: "placeholder", talker: "mecha", text: "Let me put some duct tape..." },
+		{image: "placeholder", talker: "hero", text: "..." },
+		{image: "placeholder", talker: "hero", text: "Really ?" },
+		{image: "placeholder", talker: "mecha", text: "Yeah, really." },
+		{image: "placeholder", talker: "mecha", text: "What did you think I would do ?" },
+		{image: "placeholder", talker: "mecha", text: "Open the engine or change the oil ?" },
+		{image: "placeholder", talker: "mecha", text: "Nobody does that." },
+		{image: "placeholder", talker: "mecha", text: "Come one, I'm done." },
+		{image: "placeholder", talker: "mecha", text: "That should do it." },
+		{image: "placeholder", talker: "mecha", text: "Get back in the plane," },
+		{image: "placeholder", talker: "mecha", text: "and let's fly out of this planet" }
+	];
+
+///////////////////////////////////////////////////////////////////////////////
+// Win state
+///////////////////////////////////////////////////////////////////////////////
+WinState = function() {
+	this.currScreen = 0;
+}
+
+WinState.prototype = {
+	currScreen : 0,
+}
+
+WinState.prototype.Update = function (modifier) {
+};
+	
+WinState.prototype.Draw = function(){
+	// Background
+	g_Screen.drawRect (0,0, GAME_WIDTH, GAME_HEIGHT, "#d0e7f9");
+	
+	// Display the Title
+	g_Screen.clear("rgb(0,0,0)");
+	var col = "rgb(69, 69, 69)";
+	var font = "26px Helvetica";
+
+	var currScene = scenar_scene_final[this.currScreen];
+
+	// g_Screen.drawText ("" + this.nbFound + " " + this.currScreen, 10, 10, col, font);
+	
+	if (this.currScreen < scenar_scene_final.length){
+		g_Screen.drawImage (currScene.image, 100, 30, 400, 360);
+		g_Screen.drawCenterText (currScene.text, GAME_WIDTH/2, GAME_HEIGHT-60, col, font);
+		
+		var dx = 10;
+		if (currScene.talker != "hero")
+		{
+			dx = GAME_WIDTH - 64 - dx;
+		}
+		g_Screen.drawImage ("icon_" + currScene.talker, dx, GAME_HEIGHT - 74, 64, 64);
+	}
+	else
+	{
+		gameEngine.ChangeState("credit");
+	}
+	DrawIndications();
+	
+}
+
+WinState.prototype.HandleEvent = function(event){
+	if (event.keyCode == KB_SPACE || event.keyCode == KB_ENTER) {
+		creditState.timer.Start();
+		gameEngine.ChangeState("credit"); 
+		game_sound.stop();
+		cutsceneState.Reset();
+	}
+	if (event.keyCode == KB_RIGHT) {
+		this.currScreen = this.currScreen + 1;
+	}else if (event.keyCode == KB_LEFT && this.currScreen > 0){
+		this.currScreen = this.currScreen - 1;
+	}
+}
+
 // Discovery of the cook
 var scenar_scene1 = [
 		{image: "placeholder", talker: "hero", text: "Hi !" }, 
@@ -953,6 +1003,10 @@ var scenar_scene3 = [
 		{image: "placeholder", talker: "hero", text: "You are bleeding a lot" }, 
 		{image: "placeholder", talker: "gun", text: "That's nothing." }, 
 		{image: "placeholder", talker: "gun", text: "Have you really been in the army ?" }, 
+		{image: "placeholder", talker: "hero", text: "..." }, 
+		{image: "placeholder", talker: "gun", text: "We can't stay here," }, 
+		{image: "placeholder", talker: "gun", text: "there are many wild animals." }, 
+		{image: "placeholder", talker: "gun", text: "Let's go." }, 
 	];
 	
 // And the mechanics
@@ -962,20 +1016,25 @@ var scenar_scene4 = [
 		{image: "placeholder", talker: "mecha", text: "I was waiting for you" }, 
 		{image: "placeholder", talker: "hero", text: "?" },
 		{image: "placeholder", talker: "mecha", text: "Those rescue compasses"},
-		{image: "placeholder", talker: "mecha", text: "they are pretty solid"},
-		{image: "placeholder", talker: "mecha", text: "Can you get back to spacecraft ?" },
-		{image: "placeholder", talker: "mecha", text: "Yeah, but it's useless." },
+		{image: "placeholder", talker: "mecha", text: "they are pretty solid, hu ?"},
+		{image: "placeholder", talker: "mecha", text: "Are there other survivors ?" },
+		{image: "placeholder", talker: "hero", text: "You were the last one." },
+		{image: "placeholder", talker: "hero", text: "Everybody else died in the crash" },
+		{image: "placeholder", talker: "mecha", text: "Too bad." },
+		{image: "placeholder", talker: "mecha", text: "The girl at the bar was quite sexy." },
+		{image: "placeholder", talker: "mecha", text: "Yet you are good looking as well !" },
+		{image: "placeholder", talker: "gun", text: "You should watch your language" },
+		{image: "placeholder", talker: "gun", text: "if you don't want" },
+		{image: "placeholder", talker: "gun", text: "to follow the other girl" },
+		{image: "placeholder", talker: "captain", text: "Calm down," },
+		{image: "placeholder", talker: "captain", text: "we need him to repair the spacecraft" },
+		{image: "placeholder", talker: "captain", text: "Can you do that ?" },
+		{image: "placeholder", talker: "mecha", text: "By myself, no." },
+		{image: "placeholder", talker: "mecha", text: "but together," },
+		{image: "placeholder", talker: "mecha", text: "Yes we can !" },
 	];
 
-// Then back at the plane
-var scenar_scene4 = [
-		{image: "placeholder", talker: "hero", text: "back at the place" }, 
-		{image: "placeholder", talker: "gun", text: "Oh ! How did you find me ?" }, 
-		{image: "placeholder", talker: "hero", text: "I used the rescue compass." },
-		{image: "placeholder", talker: "hero", text: "Are you OK ?" },
-		{image: "placeholder", talker: "mecha", text: "Can you get back to spacecraft ?" },
-		{image: "placeholder", talker: "mecha", text: "Yeah, but it's useless." },
-	];
+
 	
 var scenarii  =  [
 	scenar_scene1,
@@ -1037,9 +1096,10 @@ CutsceneState.prototype.DrawScene = function(){
 	}
 	else
 	{
-		gameEngine.effects.push ( new FadeEffect ("rgb(255, 255, 255)", 0.3, false) );
-		if (this.nbFound != NB_TARGETS){
+		
+		if (this.nbFound <= NB_TARGETS + 1){ 
 			gameEngine.ChangeState("game");
+			gameEngine.effects.push ( new FadeEffect ("rgb(255, 255, 255)", 0.3, false) );
 		}
 		else
 		{
