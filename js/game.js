@@ -303,6 +303,7 @@ GameState.prototype.CheckTargetsLogic = function(){
 				
 				bullet_sound.play();
 				gameEngine.effects.push ( new FadeEffect ("rgb(255, 255, 255)", 0.3, false) );
+				gameEngine.ChangeState("cutscene");
 			}
 		}
 	}
@@ -666,6 +667,76 @@ WinState.prototype.HandleEvent = function(event){
 
 
 ///////////////////////////////////////////////////////////////////////////////
+// Cutscene state
+///////////////////////////////////////////////////////////////////////////////
+IntroState = function() {}
+
+IntroState.prototype = {
+}
+
+IntroState.prototype.Update = function (modifier) {
+};
+	
+IntroState.prototype.Draw = function(){
+	// Background
+	g_Screen.drawRect (0,0, GAME_WIDTH, GAME_HEIGHT, "#d0e7f9");
+	
+	// Display the Title
+	g_Screen.clear("rgb(0,0,0)");
+	var col = "rgb(69, 69, 69)";
+	
+	g_Screen.drawCenterText ("Intro scene", GAME_WIDTH/2, GAME_HEIGHT/2-100, col, "26px Helvetica");
+	
+	g_Screen.drawCenterText ("Now press space to play", GAME_WIDTH/2, GAME_HEIGHT/2 + 100, col, "26px Helvetica");
+}
+
+IntroState.prototype.HandleEvent = function(event){
+	if (event.keyCode == KB_SPACE) {
+		gameEngine.ChangeState("game");
+		gameEngine.effects.push ( new FadeEffect ("rgb(255, 255, 255)", 0.3, false) );
+	}
+}
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Cutscene state
+///////////////////////////////////////////////////////////////////////////////
+CutsceneState = function() {}
+
+CutsceneState.prototype = {
+}
+
+CutsceneState.prototype.Update = function (modifier) {
+};
+	
+CutsceneState.prototype.Draw = function(){
+	// Background
+	g_Screen.drawRect (0,0, GAME_WIDTH, GAME_HEIGHT, "#d0e7f9");
+	
+	// Display the Title
+	g_Screen.clear("rgb(0,0,0)");
+	var col = "rgb(69, 69, 69)";
+	
+	g_Screen.drawCenterText ("Cutscene 1", GAME_WIDTH/2, GAME_HEIGHT/2-100, col, "26px Helvetica");
+	
+	g_Screen.drawCenterText ("You found the mechanics", GAME_WIDTH/2, GAME_HEIGHT/2, col, "26px Helvetica");
+	
+	g_Screen.drawCenterText ("Press space to get back to the game", GAME_WIDTH/2, GAME_HEIGHT/2 + 100, col, "26px Helvetica");
+	
+}
+
+CutsceneState.prototype.HandleEvent = function(event){
+	if (event.keyCode == KB_SPACE) {
+		gameEngine.ChangeState("game");
+		gameEngine.effects.push ( new FadeEffect ("rgb(255, 255, 255)", 0.3, false) );
+	}
+}
+
+
+
+///////////////////////////////////////////////////////////////////////////////
 // Death state
 ///////////////////////////////////////////////////////////////////////////////
 DeathState = function() {}
@@ -744,7 +815,7 @@ MenuState.prototype.Draw = function(){
 MenuState.prototype.HandleEvent = function(event){
 	if (event.keyCode == KB_ENTER) {	// Pressing "enter"
 		if (this.activeItem == 0){
-			gameEngine.ChangeState("game");
+			gameEngine.ChangeState("intro");
 			gameState.Init();
 			// currState = 1;
 			gameEngine.effects.push ( new FadeEffect ("rgb(255, 255, 255)", 0.3, false) );
@@ -817,6 +888,8 @@ var gameState = new GameState();
 var creditState = new CreditState();
 var deathState = new DeathState();
 var winState = new WinState();
+var introState = new IntroState ();
+var cutsceneState = new CutsceneState ();
 
 gameEngine.states = {
 		menu:menuState,
@@ -824,6 +897,8 @@ gameEngine.states = {
 		credit:creditState,
 		death:deathState,
 		win:winState,
+		cutscene:cutsceneState,
+		intro:introState
 	};
 
 gameEngine.Init();
