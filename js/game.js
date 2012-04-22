@@ -21,7 +21,7 @@ var start_area = {
 //Create a sound 
 // /!\ Does not work in firefox
 /*
-var bullet_sound 	= new Audio("sound/bullet.mp3");
+var target_found 	= new Audio("sound/bullet.mp3");
 var starwars_sound 	= new Audio("sound/starwars.mp3");
 var game_sound 		= new Audio("sound/soundtrack.mp3");*/
 
@@ -38,7 +38,7 @@ var game_sound = new buzz.sound(["sound/soundtrack.mp3",  "sound/soundtrack.ogg"
 });
 game_sound.setVolume (50);
 
-var bullet_sound = new buzz.sound(["sound/bullet.mp3"], {
+var target_found = new buzz.sound(["sound/target_found.mp3"], {
     preload: true,
     autoload: true,
     loop: false
@@ -330,7 +330,7 @@ GameState.prototype.CheckTargetsLogic = function(){
 			{
 				this.targets_found[t] = true;
 				
-				bullet_sound.play();
+				target_found.play();
 				gameEngine.effects.push ( new FadeEffect ("rgb(255, 255, 255)", 0.3, false) );
 				gameEngine.ChangeState("cutscene");
 				cutsceneState.nbFound = cutsceneState.nbFound + 1;
@@ -382,7 +382,7 @@ GameState.prototype.Update = function (modifier) {
 		&& this.target.y <= (this.hero.y + 32)
 	) {
 		// this.Reset();
-		// bullet_sound.play();
+		// target_found.play();
 		// gameEngine.effects.push ( new FadeEffect ("rgb(255, 255, 255)", 0.3, false) );
 	}
 };
@@ -943,13 +943,13 @@ MenuState.prototype.HandleEvent = function(event){
 		}
 	}
 	if (event.keyCode == KB_UP) { // Player holding up
-		bullet_sound.play();
+		target_found.play();
 		this.activeItem = (this.activeItem-1);
 		if (this.activeItem < 0)
 			this.activeItem = this.menuItems.length-1;
 	}
 	if (event.keyCode == KB_DOWN) { // Player holding down
-		bullet_sound.play();
+		target_found.play();
 		this.activeItem = (this.activeItem + 1) % (this.menuItems.length);
 	}
 }
