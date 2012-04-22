@@ -618,8 +618,9 @@ GameState.prototype.DrawCompass = function () {
 	py = (0.4 * s) *(py / len);
 	
 	g_Screen.drawRect(x0, y0, s, s, "rgb(0, 250, 250)");
-	g_Screen.drawText ("Distance : " + (len*0.1).toFixed (2), 32, 32, "rgb(0, 250, 250)", "24px Helvetica");
+	// g_Screen.drawText ("Distance : " + (len*0.1).toFixed (2), 32, 32, "rgb(0, 250, 250)", "24px Helvetica");
 	g_Screen.drawLine (x0 + s/2, y0 + s/2, px + x0 + s/2, py + y0 + s/2, "rgb(255, 0, 0)");
+	g_Screen.drawCenterText ((len*0.1).toFixed (2), x0 + s/2, y0 + s + 10, "rgb(0, 250, 250)", "24px Helvetica");
 };
 
 // Reset the game when the player catches a monster
@@ -1006,7 +1007,6 @@ MenuState.prototype.Draw = function(){
 MenuState.prototype.HandleEvent = function(event){
 	if (event.keyCode == KB_SPACE || event.keyCode == KB_ENTER) {	// Pressing "enter"
 		if (this.activeItem == 0){
-			
 			gameEngine.ChangeState("intro");
 			introState.Init();	// restart the scene position
 			gameState.Init();
