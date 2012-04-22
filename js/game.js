@@ -81,6 +81,11 @@ var objToLoad = [
 	"icon_cook",
 	"icon_gun",
 	"icon_mecha",
+	"scene_meet_cook",
+	"scene_meet_captain",
+	"scene_meet_gun",
+	"scene_meet_mecha",
+	"scene_duct",
 ];
 
 g_DataCache.queue = objToLoad;
@@ -880,21 +885,21 @@ IntroState.prototype.HandleEvent = function(event){
 
 // Then back at the plane
 var scenar_scene_final = [
-		{image: "placeholder", talker: "hero", text: "Back at the spacecraft" }, 
-		{image: "placeholder", talker: "mecha", text: "What ? Are you kidding ?" }, 
-		{image: "placeholder", talker: "mecha", text: "So this is your big accident ?" }, 
-		{image: "placeholder", talker: "mecha", text: "Of course i can make it fly." },
-		{image: "placeholder", talker: "mecha", text: "Let me put some duct tape..." },
-		{image: "placeholder", talker: "hero", text: "..." },
-		{image: "placeholder", talker: "hero", text: "Really ?" },
-		{image: "placeholder", talker: "mecha", text: "Yeah, really." },
-		{image: "placeholder", talker: "mecha", text: "What did you think I would do ?" },
-		{image: "placeholder", talker: "mecha", text: "Open the engine or change the oil ?" },
-		{image: "placeholder", talker: "mecha", text: "Nobody does that." },
-		{image: "placeholder", talker: "mecha", text: "Come one, I'm done." },
-		{image: "placeholder", talker: "mecha", text: "That should do it." },
-		{image: "placeholder", talker: "mecha", text: "Get back in the plane," },
-		{image: "placeholder", talker: "mecha", text: "and let's fly out of this planet" }
+		{image: "scene_meet_mecha", talker: "hero", text: "Back at the spacecraft" }, 
+		{image: "scene_meet_mecha", talker: "mecha", text: "What ? Are you kidding ?" }, 
+		{image: "scene_meet_mecha", talker: "mecha", text: "So this is your big accident ?" }, 
+		{image: "scene_meet_mecha", talker: "mecha", text: "Of course i can make it fly." },
+		{image: "scene_duct", talker: "mecha", text: "Let me put some duct tape..." },
+		{image: "scene_duct", talker: "hero", text: "..." },
+		{image: "scene_meet_mecha", talker: "hero", text: "Really ?" },
+		{image: "scene_meet_mecha", talker: "mecha", text: "Yeah, really." },
+		{image: "scene_meet_mecha", talker: "mecha", text: "What did you think I would do ?" },
+		{image: "scene_meet_mecha", talker: "mecha", text: "Open the engine or change the oil ?" },
+		{image: "scene_meet_mecha", talker: "mecha", text: "Nobody does that." },
+		{image: "scene_meet_mecha", talker: "mecha", text: "Come one, I'm done." },
+		{image: "scene_meet_mecha", talker: "mecha", text: "That should do it." },
+		{image: "scene_meet_mecha", talker: "mecha", text: "Get back in the plane," },
+		{image: "scene_meet_mecha", talker: "mecha", text: "and let's fly out of this planet" }
 	];
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -937,6 +942,7 @@ WinState.prototype.Draw = function(){
 	}
 	else
 	{
+		creditState.Init();
 		gameEngine.ChangeState("credit");
 	}
 	DrawIndications();
@@ -956,85 +962,82 @@ WinState.prototype.HandleEvent = function(event){
 		this.currScreen = this.currScreen - 1;
 	}
 }
-
 // Discovery of the cook
 var scenar_scene1 = [
-		{image: "placeholder", talker: "hero", text: "Hi !" }, 
-		{image: "placeholder", talker: "hero", text: "Are you OK ?" }, 
-		{image: "placeholder", talker: "cook", text: "Oh ! I've seen better days," },
-		{image: "placeholder", talker: "cook", text: "but I can walk, thanks." },
-		{image: "placeholder", talker: "cook", text: "How did you find me ?" }, 
-		{image: "placeholder", talker: "hero", text: "I used the rescue compass." },
-		{image: "placeholder", talker: "cook", text: "Can you get back to spacecraft ?" },
-		{image: "placeholder", talker: "hero", text: "Yeah, but it's useless." },
-		{image: "placeholder", talker: "hero", text: "It's totally broke." },
-		{image: "placeholder", talker: "cook", text: "Really ?" },
-		{image: "placeholder", talker: "hero", text: "Yeah..." },
-		{image: "placeholder", talker: "hero", text: "Maybe you did not notice," },
-		{image: "placeholder", talker: "hero", text: "but that was quite an accident." },
-		{image: "placeholder", talker: "cook", text: "Can't we repair it ?" },
-		{image: "placeholder", talker: "hero", text: "We need to find a mechanics." },
-		{image: "placeholder", talker: "cook", text: "OK, let's go." },
+		{image: "scene_meet_cook", talker: "hero", text: "Hi !" }, 
+		{image: "scene_meet_cook", talker: "hero", text: "Are you OK ?" }, 
+		{image: "scene_meet_cook", talker: "cook", text: "Oh ! I've seen better days," },
+		{image: "scene_meet_cook", talker: "cook", text: "but I can walk, thanks." },
+		{image: "scene_meet_cook", talker: "cook", text: "How did you find me ?" }, 
+		{image: "scene_meet_cook", talker: "hero", text: "I used the rescue compass." },
+		{image: "scene_meet_cook", talker: "cook", text: "Can you get back to spacecraft ?" },
+		{image: "scene_meet_cook", talker: "hero", text: "Yeah, but it's useless." },
+		{image: "scene_meet_cook", talker: "hero", text: "It's totally broke." },
+		{image: "scene_meet_cook", talker: "cook", text: "Really ?" },
+		{image: "scene_meet_cook", talker: "hero", text: "Yeah..." },
+		{image: "scene_meet_cook", talker: "hero", text: "Maybe you did not notice," },
+		{image: "scene_meet_cook", talker: "hero", text: "but that was quite an accident." },
+		{image: "scene_meet_cook", talker: "cook", text: "Can't we repair it ?" },
+		{image: "scene_meet_cook", talker: "hero", text: "We need to find a mechanics." },
+		{image: "scene_meet_cook", talker: "cook", text: "OK, let's go." },
 	];
 
 // Then the captain
 var scenar_scene2 = [
-		{image: "placeholder", talker: "hero", text: "Hi captain !" }, 
-		{image: "placeholder", talker: "captain", text: "Hi soldiers." }, 
-		{image: "placeholder", talker: "captain", text: "Thanks for rescuing me." },
-		{image: "placeholder", talker: "captain", text: "Are there other survivors ?" },
-		{image: "placeholder", talker: "hero", text: "It seems so." },
-		{image: "placeholder", talker: "cook", text: "The rescue compass says that " },
-		{image: "placeholder", talker: "cook", text: "2 other members from the crew" },
-		{image: "placeholder", talker: "cook", text: "are alive on this planet." },
-		{image: "placeholder", talker: "hero", text: "We are looking for a mechanic." },
-		{image: "placeholder", talker: "hero", text: "The spacecraft is in a bad shape." },
-		{image: "placeholder", talker: "captain", text: "OK" },
-		{image: "placeholder", talker: "captain", text: "Do you think it can fly again ?" },
-		{image: "placeholder", talker: "hero", text: "It seems pretty bad..." },
-		{image: "placeholder", talker: "captain", text: "We'll look for the others," },
-		{image: "placeholder", talker: "captain", text: "maybe a mechanics can help us." },
-		{image: "placeholder", talker: "captain", text: "otherwise, we'll find out." },
-		{image: "placeholder", talker: "captain", text: "Then, I'll fly the spacecraft." }
+		{image: "scene_meet_captain", talker: "hero", text: "Hi captain !" }, 
+		{image: "scene_meet_captain", talker: "captain", text: "Hi soldiers." }, 
+		{image: "scene_meet_captain", talker: "captain", text: "Thanks for rescuing me." },
+		{image: "scene_meet_captain", talker: "captain", text: "Are there other survivors ?" },
+		{image: "scene_meet_captain", talker: "hero", text: "It seems so." },
+		{image: "scene_meet_captain", talker: "cook", text: "The rescue compass says that " },
+		{image: "scene_meet_captain", talker: "cook", text: "2 other members from the crew" },
+		{image: "scene_meet_captain", talker: "cook", text: "are alive on this planet." },
+		{image: "scene_meet_captain", talker: "hero", text: "We are looking for a mechanic." },
+		{image: "scene_meet_captain", talker: "hero", text: "The spacecraft is in a bad shape." },
+		{image: "scene_meet_captain", talker: "captain", text: "OK" },
+		{image: "scene_meet_captain", talker: "captain", text: "Do you think it can fly again ?" },
+		{image: "scene_meet_captain", talker: "hero", text: "It seems pretty bad..." },
+		{image: "scene_meet_captain", talker: "captain", text: "We'll look for the others," },
+		{image: "scene_meet_captain", talker: "captain", text: "maybe a mechanics can help us." },
+		{image: "scene_meet_captain", talker: "captain", text: "otherwise, we'll find out." },
+		{image: "scene_meet_captain", talker: "captain", text: "Then, I'll fly the spacecraft." }
 	];
 	
 // The gungirl
 var scenar_scene3 = [
-		{image: "placeholder", talker: "hero", text: "You are bleeding a lot" }, 
-		{image: "placeholder", talker: "gun", text: "That's nothing." }, 
-		{image: "placeholder", talker: "gun", text: "Have you really been in the army ?" }, 
-		{image: "placeholder", talker: "hero", text: "..." }, 
-		{image: "placeholder", talker: "gun", text: "We can't stay here," }, 
-		{image: "placeholder", talker: "gun", text: "there are many wild animals." }, 
-		{image: "placeholder", talker: "gun", text: "Let's go." }, 
+		{image: "scene_meet_gun", talker: "hero", text: "You are bleeding a lot" }, 
+		{image: "scene_meet_gun", talker: "gun", text: "That's nothing." }, 
+		{image: "scene_meet_gun", talker: "gun", text: "Have you really been in the army ?" }, 
+		{image: "scene_meet_gun", talker: "hero", text: "..." }, 
+		{image: "scene_meet_gun", talker: "gun", text: "We can't stay here," }, 
+		{image: "scene_meet_gun", talker: "gun", text: "there are many wild animals." }, 
+		{image: "scene_meet_gun", talker: "gun", text: "Let's go." }, 
 	];
 	
 // And the mechanics
 var scenar_scene4 = [
-		{image: "placeholder", talker: "hero", text: "Hi" }, 
-		{image: "placeholder", talker: "mecha", text: "Ha, finally," }, 
-		{image: "placeholder", talker: "mecha", text: "I was waiting for you" }, 
-		{image: "placeholder", talker: "hero", text: "?" },
-		{image: "placeholder", talker: "mecha", text: "Those rescue compasses"},
-		{image: "placeholder", talker: "mecha", text: "they are pretty solid, hu ?"},
-		{image: "placeholder", talker: "mecha", text: "Are there other survivors ?" },
-		{image: "placeholder", talker: "hero", text: "You were the last one." },
-		{image: "placeholder", talker: "hero", text: "Everybody else died in the crash" },
-		{image: "placeholder", talker: "mecha", text: "Too bad." },
-		{image: "placeholder", talker: "mecha", text: "The girl at the bar was quite sexy." },
-		{image: "placeholder", talker: "mecha", text: "Yet you are good looking as well !" },
-		{image: "placeholder", talker: "gun", text: "You should watch your language" },
-		{image: "placeholder", talker: "gun", text: "if you don't want" },
-		{image: "placeholder", talker: "gun", text: "to follow the other girl" },
-		{image: "placeholder", talker: "captain", text: "Calm down," },
-		{image: "placeholder", talker: "captain", text: "we need him to repair the spacecraft" },
-		{image: "placeholder", talker: "captain", text: "Can you do that ?" },
-		{image: "placeholder", talker: "mecha", text: "By myself, no." },
-		{image: "placeholder", talker: "mecha", text: "but together," },
-		{image: "placeholder", talker: "mecha", text: "Yes we can !" },
+		{image: "scene_meet_mecha", talker: "hero", text: "Hi" }, 
+		{image: "scene_meet_mecha", talker: "mecha", text: "Ha, finally," }, 
+		{image: "scene_meet_mecha", talker: "mecha", text: "I was waiting for you" }, 
+		{image: "scene_meet_mecha", talker: "hero", text: "?" },
+		{image: "scene_meet_mecha", talker: "mecha", text: "Those rescue compasses"},
+		{image: "scene_meet_mecha", talker: "mecha", text: "they are pretty solid, hu ?"},
+		{image: "scene_meet_mecha", talker: "mecha", text: "Are there other survivors ?" },
+		{image: "scene_meet_mecha", talker: "hero", text: "You were the last one." },
+		{image: "scene_meet_mecha", talker: "hero", text: "Everybody else died in the crash" },
+		{image: "scene_meet_mecha", talker: "mecha", text: "Too bad." },
+		{image: "scene_meet_mecha", talker: "mecha", text: "The girl at the bar was quite sexy." },
+		{image: "scene_meet_mecha", talker: "mecha", text: "Yet you are good looking as well !" },
+		{image: "scene_meet_mecha", talker: "gun", text: "You should watch your language" },
+		{image: "scene_meet_mecha", talker: "gun", text: "if you don't want" },
+		{image: "scene_meet_mecha", talker: "gun", text: "to follow the other girl" },
+		{image: "scene_meet_mecha", talker: "captain", text: "Calm down," },
+		{image: "scene_meet_mecha", talker: "captain", text: "we need him to repair the spacecraft" },
+		{image: "scene_meet_mecha", talker: "captain", text: "Can you do that ?" },
+		{image: "scene_meet_mecha", talker: "mecha", text: "By myself, no." },
+		{image: "scene_meet_mecha", talker: "mecha", text: "but together," },
+		{image: "scene_meet_mecha", talker: "mecha", text: "Yes we can !" },
 	];
-
-
 	
 var scenarii  =  [
 	scenar_scene1,
@@ -1098,7 +1101,7 @@ CutsceneState.prototype.DrawScene = function(){
 	{
 		
 		if (this.nbFound <= NB_TARGETS + 1){ 
-			gameEngine.ChangeState("game");
+			gameEngine.ChangeState("game"); /// "game"
 			gameEngine.effects.push ( new FadeEffect ("rgb(255, 255, 255)", 0.3, false) );
 		}
 		else
