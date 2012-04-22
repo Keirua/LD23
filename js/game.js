@@ -53,6 +53,7 @@ var breathing_sound = new buzz.sound(["sound/breathing.mp3", "sound/breathing.og
 g_DataCache = new DataCache();
 
 var objToLoad = [
+	"title_screen",
 	"monster",
 	"hero",
 	"crew",
@@ -1210,8 +1211,11 @@ MenuState.prototype.Draw = function(){
 	g_Screen.drawRect (0,0, GAME_WIDTH, GAME_HEIGHT, "#d0e7f9");
 	
 	// Display the Title
-	g_Screen.drawCenterText ("Lost in space", GAME_WIDTH/2,32, "rgb(0, 0, 0)", "64px Helvetica");
-	g_Screen.drawCenterText ("(it happens)", 3*GAME_WIDTH/4,32+64, "#696969", "32px Helvetica");
+	//g_Screen.drawCenterText ("Lost in space", GAME_WIDTH/2,32, "rgb(0, 0, 0)", "64px Helvetica");
+	//g_Screen.drawCenterText ("(it happens)", 3*GAME_WIDTH/4,32+64, "#696969", "32px Helvetica");
+	
+	g_Screen.drawImage("title_screen", 50, 10, 500, 192);
+	
 	// g_Screen.drawText ("Cache : " + g_DataCache.queue.length, 32,64, "rgb(0, 250, 250)", "26px Helvetica");
 	
 	// Display the menu
