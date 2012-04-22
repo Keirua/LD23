@@ -988,7 +988,7 @@ CreditState.prototype.HandleEvent = function(event){
 
 CreditState.prototype.Draw = function () {
 	var dx = GAME_WIDTH/2;
-	var dy = this.pos - this.timer.Elapsed()*0.001*30;
+	var dy = this.pos - this.timer.Elapsed()*0.001*40;
 	var col = "#696969";
 	var text = [
 	
@@ -1004,6 +1004,9 @@ CreditState.prototype.Draw = function () {
 		"Images : Inkscape, Paint.Net",
 		"Mental : Pizza, noodles, junk food",
 		"Music : Audacity, Circuli",
+		"",
+		"Thanks to Ludum Dare for organizing the event",
+		"and to everybody on irc for their help",
 		"",
 		"Press [enter] to go back to the menu"
 	];
