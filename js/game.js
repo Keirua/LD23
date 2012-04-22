@@ -27,10 +27,14 @@ g_DataCache = new DataCache();
 var objToLoad = [
 	"monster",
 	"hero",
+	"crew",
 	// "background",
 	"tree",
 	"floor_tileset",
-	"spacecraft"
+	"spacecraft",
+	// "enter_key",
+	"space_key", // finally, I chose not to use it. Only 2 key is easier for the player to understand
+	"arrow_keys",
 ];
 
 g_DataCache.queue = objToLoad;
@@ -186,7 +190,7 @@ GameState.prototype = {
 var heroSprite = new SpriteSheet(4,8, 200, "hero");
 
 GameState.prototype.HandleEvent = function(event){
-	if (event.keyCode == KB_SPACE) {	// Pressing "enter"
+	if (event.keyCode == KB_SPACE || event.keyCode == KB_ENTER) {	// Pressing "enter"
 		if (this.hero.canRun){
 			this.hero.isRunning = true;
 			this.hero.canRun = false; // boolean saying 
@@ -519,7 +523,8 @@ GameState.prototype.DrawWorld = function () {
 	for (var key in this.targets){
 		var target = this.targets[key];
 		if (this.targets_found[key] == false){
-			this.viewport.DrawRect (target.x, target.y, 32, 32, "#FFFFFF" );
+			// this.viewport.DrawRect (target.x, target.y, 32, 32, "#FFFFFF" );
+			this.viewport.DrawSprite ("crew", target.x, target.y, 32, 32);
 		}
 	}
 	
@@ -633,9 +638,6 @@ GameState.prototype.Init = function () {
 	this.InitFloor ();
 };
 
-
-
-
 ///////////////////////////////////////////////////////////////////////////////
 // Win state
 ///////////////////////////////////////////////////////////////////////////////
@@ -657,13 +659,11 @@ WinState.prototype.Draw = function(){
 	
 	g_Screen.drawCenterText ("You won", GAME_WIDTH/2, GAME_HEIGHT/2-100, col, "26px Helvetica");
 	
-	
-	
 	g_Screen.drawCenterText ("Press enter to start again", GAME_WIDTH/2, GAME_HEIGHT/2 + 100, col, "26px Helvetica");
 }
 
 WinState.prototype.HandleEvent = function(event){
-	if (event.keyCode == KB_ENTER) {
+	if (event.keyCode == KB_SPACE) {
 		gameEngine.ChangeState("menu");
 	}
 }
@@ -672,9 +672,12 @@ WinState.prototype.HandleEvent = function(event){
 ///////////////////////////////////////////////////////////////////////////////
 // Cutscene state
 ///////////////////////////////////////////////////////////////////////////////
-IntroState = function() {}
+IntroState = function() {
+	this.currScene = 0;
+}
 
 IntroState.prototype = {
+	currScene : 0
 }
 
 IntroState.prototype.Update = function (modifier) {
@@ -690,11 +693,18 @@ IntroState.prototype.Draw = function(){
 	
 	g_Screen.drawCenterText ("Intro scene", GAME_WIDTH/2, GAME_HEIGHT/2-100, col, "26px Helvetica");
 	
+	g_Screen.drawCenterText ("Scene #" + this.currScene, GAME_WIDTH/2, GAME_HEIGHT/2, col, "26px Helvetica");
+
 	g_Screen.drawCenterText ("Now press space to play", GAME_WIDTH/2, GAME_HEIGHT/2 + 100, col, "26px Helvetica");
 }
 
 IntroState.prototype.HandleEvent = function(event){
 	if (event.keyCode == KB_SPACE) {
+		this.currScene = this.currScene + 1;
+		// gameEngine.effects.push ( new FadeEffect ("rgb(255, 255, 255)", 0.3, false) );
+	}
+
+	if (event.keyCode == KB_ENTER) {
 		gameEngine.ChangeState("game");
 		gameEngine.effects.push ( new FadeEffect ("rgb(255, 255, 255)", 0.3, false) );
 	}
@@ -775,7 +785,7 @@ DeathState.prototype.Draw = function(){
 }
 
 DeathState.prototype.HandleEvent = function(event){
-	if (event.keyCode == KB_ENTER) {
+	if (event.keyCode == KB_SPACE || event.keyCode == KB_ENTER) {
 		gameEngine.ChangeState("menu");
 	}
 }
@@ -820,14 +830,25 @@ MenuState.prototype.Draw = function(){
 		}
 		g_Screen.drawCenterText (str, GAME_WIDTH/2, GAME_HEIGHT/2 + 50 * (i), col, "30pt Calibri");
 	}
+	
+	var x = 200, y = 200;
+	
+	g_Screen.drawImage ("space_key", GAME_WIDTH/2 - x + 30,  GAME_HEIGHT/3 + y + 34, 136, 29);
+	
+	g_Screen.drawImage ("arrow_keys", GAME_WIDTH/2 + x - 100 - 30, GAME_HEIGHT/3 + y, 100, 63);
+	
+	g_Screen.drawCenterText ("Select/Run", GAME_WIDTH/2 - x + 100, GAME_HEIGHT/3 + y + 60, "black", "24pt Calibri");
+	g_Screen.drawCenterText ("Move", GAME_WIDTH/2 + x - 80, GAME_HEIGHT/3 + y + 60, "black", "24pt Calibri");
 }
 
 
 
 MenuState.prototype.HandleEvent = function(event){
-	if (event.keyCode == KB_ENTER) {	// Pressing "enter"
+	if (event.keyCode == KB_SPACE || event.keyCode == KB_ENTER) {	// Pressing "enter"
 		if (this.activeItem == 0){
+			
 			gameEngine.ChangeState("intro");
+			introState.currScene = 0;	// restart the scene position
 			gameState.Init();
 			// currState = 1;
 			gameEngine.effects.push ( new FadeEffect ("rgb(255, 255, 255)", 0.3, false) );

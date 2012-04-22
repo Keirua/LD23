@@ -54,6 +54,16 @@ Screen.prototype.drawText = function (text, x, y, color, font){
 	this.context.fillText(text, x, y);
 }
 
+Screen.prototype.drawImage = function (img, x, y, w, h){
+	/*this.context.fillStyle = color;
+	this.context.font = font;
+	this.context.textAlign = "center";
+	this.context.textBaseline = "top";
+	this.context.fillText(text, x, y);*/
+	
+	this.context.drawImage(g_DataCache.getImage(img), x, y, w, h);
+}
+
 // Draw a centered text around the x position
 Screen.prototype.drawCenterText = function (text, x, y, color, font){
 	this.context.fillStyle = color;
