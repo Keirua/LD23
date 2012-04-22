@@ -9,6 +9,8 @@ var FLOOR_SIZE = 32;
 
 var START_AREA_SIZE = WORLD_WIDTH * 0.1; // 10 % of the total game area
 
+var NB_TARGETS = 4; // The number of persons to rescue
+
 var start_area = {
 	x : WORLD_WIDTH/2 - START_AREA_SIZE/2,
 	y : WORLD_HEIGHT/2 - START_AREA_SIZE/2,
@@ -304,6 +306,7 @@ GameState.prototype.CheckTargetsLogic = function(){
 				bullet_sound.play();
 				gameEngine.effects.push ( new FadeEffect ("rgb(255, 255, 255)", 0.3, false) );
 				gameEngine.ChangeState("cutscene");
+				cutsceneState.nbFound = cutsceneState.nbFound + 1;
 			}
 		}
 	}
@@ -335,6 +338,7 @@ GameState.prototype.CheckDeathLogic = function (modifier){
 		{
 			// Yep, like this. I could have a bit softer, but hey.
 			gameEngine.ChangeState("death");
+			cutsceneState.Reset();
 		}
 	}
 }
@@ -454,9 +458,8 @@ GameState.prototype.CreateWorld = function () {
 	}
 	var target = this.generateRandomPosition (32, 32);
 	
-	var nb_targets = 4;
 	
-	for (i = 0; i < nb_targets; i = i+1){
+	for (i = 0; i < NB_TARGETS; i = i+1){
 		this.targets_found[i] = false;
 		this.targets[i] = {
 			x : rnd (start_area.x, START_AREA_SIZE),
@@ -698,15 +701,20 @@ IntroState.prototype.HandleEvent = function(event){
 }
 
 
-
-
 ///////////////////////////////////////////////////////////////////////////////
 // Cutscene state
 ///////////////////////////////////////////////////////////////////////////////
-CutsceneState = function() {}
+CutsceneState = function() {
+	this.nbFound = 0;
+}
 
 CutsceneState.prototype = {
+	
 }
+
+CutsceneState.prototype.Reset = function () {
+	this.nbFound = 0;
+};
 
 CutsceneState.prototype.Update = function (modifier) {
 };
@@ -721,7 +729,11 @@ CutsceneState.prototype.Draw = function(){
 	
 	g_Screen.drawCenterText ("Cutscene 1", GAME_WIDTH/2, GAME_HEIGHT/2-100, col, "26px Helvetica");
 	
-	g_Screen.drawCenterText ("You found the mechanics", GAME_WIDTH/2, GAME_HEIGHT/2, col, "26px Helvetica");
+	if (this.nbFound != NB_TARGETS){
+		g_Screen.drawCenterText ("You found " + this.nbFound + "/" + NB_TARGETS + " persons", GAME_WIDTH/2, GAME_HEIGHT/2, col, "26px Helvetica");
+	}
+	else
+		g_Screen.drawCenterText ("You found everybody ! Now go back to the spacecraft !", GAME_WIDTH/2, GAME_HEIGHT/2, col, "26px Helvetica");
 	
 	g_Screen.drawCenterText ("Press space to get back to the game", GAME_WIDTH/2, GAME_HEIGHT/2 + 100, col, "26px Helvetica");
 	
