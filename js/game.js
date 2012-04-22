@@ -790,7 +790,8 @@ IntroState.prototype.DrawStaticScene = function(){
 		{image: "scene_crew", text: "of a few people in a spacecraft." }, 
 		{image: "scene_crew", text: "One day, they had a few issues" },
 		{image: "scene_alien", text: "with a giant lizard." },
-		{image: "scene_alien", text: "Oh no, that's again not my story..." },
+		{image: "scene_alien", text: "Oh no, wait..." },
+		{image: "scene_alien", text: "that's, again, not my story." },
 		{image: "scene_spaceview", text: "In this one," },
 		{image: "scene_spaceview", text: "they were carefully flying through space." },
 		{image: "scene_spaceview", text: "Well, carefully isn't quite the word," },
@@ -823,7 +824,7 @@ IntroState.prototype.DrawStaticScene = function(){
 		{image: "scene_compass", text: "This tool indicates the distance and direction" },
 		{image: "scene_compass", text: "of the other members of the crew." },
 		{image: "scene_you", text: "You are that guy." },
-		{image: "scene_you", text: "Rescue your friends using your compass, " },
+		{image: "scene_you", text: "Rescue your friends using your compass," },
 		{image: "scene_you", text: "stay alive," },
 		{image: "scene_you", text: "and get back to the spacecraft." },
 		{image: "scene_you", text: "Good luck." },
@@ -858,7 +859,7 @@ IntroState.prototype.DrawStarwarsScene = function(){
 	// if (yoffset < -400)
 	if (this.timer.Elapsed () > 9000)
 	{
-		g_Screen.drawCenterText ("Hit [space] to continue", GAME_WIDTH/2, 400, col, font);
+		g_Screen.drawCenterText ("Hit [left] to continue", GAME_WIDTH/2, 400, col, font);
 	}
 }
 
@@ -923,7 +924,34 @@ CutsceneState.prototype.Reset = function () {
 
 CutsceneState.prototype.Update = function (modifier) {
 };
-	
+
+CutsceneState.prototype.DrawScene1 = function(){
+var col = "rgb(69, 69, 69)";
+	g_Screen.drawCenterText ("You found " + this.nbFound + "/" + NB_TARGETS + " persons", GAME_WIDTH/2, GAME_HEIGHT/2, col, "26px Helvetica");
+} 
+
+CutsceneState.prototype.DrawScene2 = function(){
+var col = "rgb(69, 69, 69)";
+	g_Screen.drawCenterText ("You found " + this.nbFound + "/" + NB_TARGETS + " persons", GAME_WIDTH/2, GAME_HEIGHT/2, col, "26px Helvetica");
+} 
+
+CutsceneState.prototype.DrawScene3 = function(){
+var col = "rgb(69, 69, 69)";
+	g_Screen.drawCenterText ("You found " + this.nbFound + "/" + NB_TARGETS + " persons", GAME_WIDTH/2, GAME_HEIGHT/2, col, "26px Helvetica");
+} 
+
+CutsceneState.prototype.DrawScene4 = function(){
+	var col = "rgb(69, 69, 69)";
+	g_Screen.drawCenterText ("You found " + this.nbFound + "/" + NB_TARGETS + " persons", GAME_WIDTH/2, GAME_HEIGHT/2, col, "26px Helvetica");
+}
+
+// Final cutscene, where the player is told to go to the spacecraft
+CutsceneState.prototype.DrawScene5 = function(){
+	g_Screen.drawCenterText ("You found everybody !", GAME_WIDTH/2, GAME_HEIGHT/2, col, "26px Helvetica");
+	g_Screen.drawCenterText (" Now go back to the spacecraft !", GAME_WIDTH/2, GAME_HEIGHT/2 + 100, col, "26px Helvetica");
+	g_Screen.drawCenterText ("You found " + this.nbFound + "/" + NB_TARGETS + " persons", GAME_WIDTH/2, GAME_HEIGHT/2, col, "26px Helvetica");
+} 
+
 CutsceneState.prototype.Draw = function(){
 	// Background
 	g_Screen.drawRect (0,0, GAME_WIDTH, GAME_HEIGHT, "#d0e7f9");
@@ -934,13 +962,21 @@ CutsceneState.prototype.Draw = function(){
 	
 	g_Screen.drawCenterText ("Cutscene 1", GAME_WIDTH/2, GAME_HEIGHT/2-100, col, "26px Helvetica");
 	
-	if (this.nbFound != NB_TARGETS){
-		g_Screen.drawCenterText ("You found " + this.nbFound + "/" + NB_TARGETS + " persons", GAME_WIDTH/2, GAME_HEIGHT/2, col, "26px Helvetica");
+	if (this.nbFound == 1){
+		CutsceneState.prototype.DrawScene1();
 	}
-	else
+	else if(this.nbFound == 2){
+		CutsceneState.prototype.DrawScene1();
+	}
+	else if(this.nbFound == 3){
+		CutsceneState.prototype.DrawScene1();
+	}
+	else if(this.nbFound == 4){
+		CutsceneState.prototype.DrawScene1();
+	}
+	else if (this.nbFound != NB_TARGETS)
 	{
-		g_Screen.drawCenterText ("You found everybody !", GAME_WIDTH/2, GAME_HEIGHT/2, col, "26px Helvetica");
-		g_Screen.drawCenterText (" Now go back to the spacecraft !", GAME_WIDTH/2, GAME_HEIGHT/2 + 100, col, "26px Helvetica");
+		CutsceneState.prototype.DrawScene1();
 	}
 	g_Screen.drawCenterText ("Press space to get back to the game", GAME_WIDTH/2, GAME_HEIGHT/2 + 200, col, "26px Helvetica");
 	
